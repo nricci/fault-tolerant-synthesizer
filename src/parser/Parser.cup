@@ -1,0 +1,42 @@
+package parser;
+
+import java_cup.runtime.*;
+import util.binarytree.*;
+
+parser code {:
+	public static void main(String args[]) throws Exception {
+		SymbolFactory sf = new DefaultSymbolFactory();
+		if (args.length==0) new Parser(new Scanner(System.in,sf),sf).parse();
+		else new Parser(new Scanner(new java.io.FileInputStream(args[0]),sf),sf).parse();
+	}
+:}
+
+terminal String EXIST, FORALL, PERMISSION, OBLIGATION, RECOVERY, LPAREN, RPAREN, NEXT, UNTIL, TRUE,  NEG, IMPLIES, IMPLIESTEMP, SEMI, ID;
+
+non terminal BinaryTree formula, path_form, state_form;
+non terminal  String  quantifier;
+precedence left IMPLIES;
+precedence left UNTIL;
+precedence right NEXT;
+precedence right NEG;
+
+formula ::= state_form:s SEMI {:  RESULT = s; s.printPreOrder();  :}
+           ; 
+
+path_form ::= NEXT:n state_form:s {: RESULT = new BinaryTree(n, s, null); :}
+            | state_form:p UNTIL:u state_form:q {: RESULT = new BinaryTree(u, p, q); :};
+          
+
+state_form ::= TRUE:t {: RESULT = new BinaryTree(t); :}
+            | ID:i {: RESULT = new BinaryTree(i);  :}
+	    | NEG:n state_form:p {: RESULT = new BinaryTree( n , p , null);  :}      
+	    | state_form:p IMPLIES:i state_form:q {: RESULT = new BinaryTree(i, p, q);  :}
+            | quantifier:q LPAREN path_form:p IMPLIESTEMP path_form:r  RPAREN {: RESULT = new BinaryTree(q, p, r);  :}
+	    ;
+
+quantifier ::= EXIST:e {: RESULT = e ; :}
+            | FORALL:f {: RESULT = f ; :}
+	    | PERMISSION:p {: RESULT = p ; :}      
+	    | OBLIGATION:o {: RESULT = o ; :}
+            | RECOVERY:r {: RESULT = r ;  :}
+	    ;
