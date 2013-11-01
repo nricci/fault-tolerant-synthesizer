@@ -4,8 +4,8 @@
   <property name="lib"     location="lib"     />
   <property name="bin"     location="bin"     />
 
-  <property name="cup"     location="src/dctl/cup"     />
-  <property name="jflex"   location="src/dctl/jflex"    />
+  <property name="cup"     location="src/parser"     />
+  <property name="jflex"   location="src/parser"    />
   <property name="cup_output"    location="src/"    />
   
   <property environment="env" />
@@ -47,7 +47,6 @@
 
   <target name="init">
     <mkdir dir="${bin}"/>
-    <mkdir dir="${cup_output}"/>
 <!-- <mkdir dir="${dist}"/> -->
   </target>
 
@@ -71,7 +70,6 @@
   </target>
   
   <target name="clean">
-    <delete dir="${cup_output}" />
     <delete dir="${bin}" />
   </target>
   
