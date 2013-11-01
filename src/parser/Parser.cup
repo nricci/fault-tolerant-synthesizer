@@ -11,7 +11,11 @@ parser code {:
 	}
 :}
 
-terminal String EXIST, FORALL, PERMISSION, OBLIGATION, RECOVERY, LPAREN, RPAREN, NEXT, UNTIL, TRUE,  NEG, IMPLIES, IMPLIESTEMP, SEMI, ID;
+terminal String LPAREN, RPAREN, SEMI;
+terminal String TRUE, FALSE, ID;
+terminal String NEG, AND, OR, IMPLIES;
+terminal String EXIST, FORALL, PERMISSION, OBLIGATION;
+terminal String NEXT, UNTIL, FUTURE, ALWAYS;
 
 non terminal BinaryTree formula, path_form, state_form;
 non terminal  String  quantifier;

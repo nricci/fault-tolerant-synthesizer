@@ -1,8 +1,6 @@
 package dctl.formulas;
 
-public class Negation extends StateFormula implements DCTLUnaryExpression {
-	
-	private StateFormula _arg0;
+public class WeakUntil extends PathFormula implements DCTLBinaryExpression {
 
 	@Override
 	public boolean is_constant() {
@@ -35,28 +33,15 @@ public class Negation extends StateFormula implements DCTLUnaryExpression {
 	}
 
 	@Override
-	public boolean is_elementary() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean is_alpha() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean is_beta() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public DCTLExpression arg() {
+	public DCTLExpression arg1() {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
+	@Override
+	public DCTLExpression arg2() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

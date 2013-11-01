@@ -1,6 +1,6 @@
 package dctl.formulas;
 
-public class Implication extends StateFormula {
+public class Implication extends StateFormula implements DCTLBinaryExpression {
 
 	@Override
 	public boolean is_elementary() {
@@ -48,6 +48,18 @@ public class Implication extends StateFormula {
 	public boolean is_path_formula() {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public DCTLExpression arg1() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public DCTLExpression arg2() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

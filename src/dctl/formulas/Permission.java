@@ -1,8 +1,6 @@
 package dctl.formulas;
 
-public class Negation extends StateFormula implements DCTLUnaryExpression {
-	
-	private StateFormula _arg0;
+public class Permission extends StateFormula implements DCTLUnaryExpression {
 
 	@Override
 	public boolean is_constant() {
@@ -35,6 +33,12 @@ public class Negation extends StateFormula implements DCTLUnaryExpression {
 	}
 
 	@Override
+	public DCTLExpression arg() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
 	public boolean is_elementary() {
 		// TODO Auto-generated method stub
 		return false;
@@ -51,12 +55,5 @@ public class Negation extends StateFormula implements DCTLUnaryExpression {
 		// TODO Auto-generated method stub
 		return false;
 	}
-
-	@Override
-	public DCTLExpression arg() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
 
 }

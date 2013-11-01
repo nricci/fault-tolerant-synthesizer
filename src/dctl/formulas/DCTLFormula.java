@@ -1,5 +1,3 @@
 package dctl.formulas;
 
-public interface DCTLFormula {
-
-}
+public interface DCTLFormula extends DCTLExpression {}
