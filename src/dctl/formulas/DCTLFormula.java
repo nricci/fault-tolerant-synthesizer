@@ -23,6 +23,8 @@ public interface DCTLFormula {
 	public boolean is_beta();
 	
 	public DCTLFormula get_argument(int n);
+	
+	public String prop_name();
 
 	public Set<DCTLFormula> get_decomposition();
 

@@ -4,22 +4,43 @@ import java.util.Set;
 
 public class Formula implements DCTLFormula {
 	
-	private Formula[] args;
+	private DCTLFormula[] args;
 	
 	private Type t;
 	
-	public Formula(Type t) {
-		
-	}
+	private String _prop_name;
 	
-	public Formula(Type t, DCTLFormula arg) {
-		
-	}
 	
-	public Formula(Type t, DCTLFormula arg1, DCTLFormula arg2) {
-		
-	}
-	
+	public Formula(Type t, String prop, DCTLFormula... args) throws Exception {
+		if (t.is_atom()) {
+			if (t.equals(Type.PROPOSITION)) 
+				if (prop == null) 
+					throw new Exception("Misusage of constructor: for creating a proposition formula the name of the proposition must be supplied.");
+				else 
+					_prop_name = prop;
+			this.t = t;
+		}
+		else if (t.is_unary()) {
+			if (args.length < 1)
+				throw new Exception("Misusage of constructor: for creating a unary formula at least one argument must be supplied.");
+			else
+				this.t = t;
+				this.args = new Formula[1];
+				this.args[0] = args[0];	
+		}
+		else if (t.is_binary()) {
+			if (args.length < 2)
+				throw new Exception("Misusage of constructor: for creating a binary formula at least two arguments must be supplied.");
+			else
+				this.t = t;
+				this.args = new Formula[2];
+				this.args[0] = args[0];	
+				this.args[1] = args[1];
+		}
+		else {
+			throw new Error("The type must be exactly one of, atom, unary or binary. Check Implementation.");
+		}
+	}	
 
 	@Override
 	public boolean is_atom() {
@@ -83,6 +104,12 @@ public class Formula implements DCTLFormula {
 
 	@Override
 	public Type type() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String prop_name() {
 		// TODO Auto-generated method stub
 		return null;
 	}

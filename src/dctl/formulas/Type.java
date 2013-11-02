@@ -55,6 +55,22 @@ public enum Type {
 				|| this.equals(FUTURE);
 	}
 	
+	public boolean is_unary() {
+		return this.equals(NEXT)
+				|| this.equals(FUTURE)
+				|| this.equals(GLOBALLY)
+				|| this.equals(NEGATION)
+				|| this.is_quantifier();
+	}
+	
+	public boolean is_binary() {
+		return this.equals(OR)
+				|| this.equals(AND)
+				|| this.equals(IMPLIES)
+				|| this.equals(UNTIL)
+				|| this.equals(WEAKUNTIL);				
+	}
+	
 	
 	
 }

@@ -1,9 +1,25 @@
 package parser;
 
 import java_cup.runtime.*;
-import util.binarytree.*;
+import dctl.formulas.*;
+import java.util.Set;
+import java.util.HashSet;
+
 
 parser code {:
+
+	Set<DCTLFormula> _spec;
+
+	public static Set<DCTLFormula> parse_specification(String file) throws Exception{
+		if (file == null) 
+			throw new Exception("The path to the file containing the specification must be supplied.");
+		SymbolFactory sf = new DefaultSymbolFactory();
+		Parser p = new Parser(new Scanner(new java.io.FileInputStream(file),sf),sf);
+		p._spec = new HashSet<DCTLFormula>();
+		p.parse();		
+		return p._spec;
+	}
+
 	public static void main(String args[]) throws Exception {
 		SymbolFactory sf = new DefaultSymbolFactory();
 		if (args.length==0) new Parser(new Scanner(System.in,sf),sf).parse();
@@ -14,33 +30,43 @@ parser code {:
 terminal String LPAREN, RPAREN, SEMI;
 terminal String TRUE, FALSE, ID;
 terminal String NEG, AND, OR, IMPLIES;
-terminal String EXIST, FORALL, PERMISSION, OBLIGATION;
-terminal String NEXT, UNTIL, FUTURE, ALWAYS;
+terminal String EXISTS, FORALL, PERMISSION, OBLIGATION;
+terminal String NEXT, UNTIL, FUTURE, GLOBALLY;
 
-non terminal BinaryTree formula, path_form, state_form;
-non terminal  String  quantifier;
+non terminal specification;
+non terminal DCTLFormula formula, path_form, state_form;
+
 precedence left IMPLIES;
+precedence left OR;
+precedence left AND;
 precedence left UNTIL;
+precedence left FUTURE, GLOBALLY;
 precedence right NEXT;
 precedence right NEG;
 
-formula ::= state_form:s SEMI {:  RESULT = s; s.printPreOrder();  :}
+specification ::= formula:f specification	{: parser._spec.add(f); :}
+			;
+
+formula ::= state_form:s SEMI {: RESULT = s; :}
            ; 
 
-path_form ::= NEXT:n state_form:s {: RESULT = new BinaryTree(n, s, null); :}
-            | state_form:p UNTIL:u state_form:q {: RESULT = new BinaryTree(u, p, q); :};
+state_form 	::=	TRUE									{: RESULT = new Formula(Type.TRUE,null);	:}
+			|	FALSE									{: RESULT = new Formula(Type.FALSE,null); 	:}
+            | 	ID:i 									{: RESULT = new Formula(Type.PROPOSITION, i);  	:}
+	    	| 	NEG state_form:p 						{: RESULT = new Formula(Type.NEGATION, null, p);		:} 
+	    	| 	state_form:p AND state_form:q 			{: RESULT = new Formula(Type.AND, null, p, q);	:}    
+	    	| 	state_form:p OR state_form:q 			{: RESULT = new Formula(Type.OR, null, p, q);	:}
+	    	| 	state_form:p IMPLIES state_form:q 		{: RESULT = new Formula(Type.IMPLIES, null, p, q); :}
+	    	|	LPAREN state_form:p RPAREN				{: RESULT = p; :}
+            | 	EXISTS LPAREN path_form:p RPAREN 		{: RESULT = new Formula(Type.EXISTS, null, p); :}
+            | 	FORALL LPAREN path_form:p RPAREN 		{: RESULT = new Formula(Type.FORALL, null, p); :}
+            | 	OBLIGATION LPAREN path_form:p RPAREN 	{: RESULT = new Formula(Type.OBLIGATION, null, p); :}
+            | 	PERMISSION LPAREN path_form:p RPAREN	{: RESULT = new Formula(Type.PERMISSION, null, p); :}
+	    ;
+
+path_form ::=	NEXT state_form:p 						{: RESULT = new Formula(Type.NEXT, null, p); 	:}
+			|	FUTURE state_form:p 			 		{: RESULT = new Formula(Type.FUTURE, null, p); 	:}
+			|	GLOBALLY state_form:p			 		{: RESULT = new Formula(Type.GLOBALLY, null, p); :}
+			|	state_form:p UNTIL:u state_form:q 		{: RESULT = new Formula(Type.UNTIL, null, p, q); :}
+		;
           
-
-state_form ::= TRUE:t {: RESULT = new BinaryTree(t); :}
-            | ID:i {: RESULT = new BinaryTree(i);  :}
-	    | NEG:n state_form:p {: RESULT = new BinaryTree( n , p , null);  :}      
-	    | state_form:p IMPLIES:i state_form:q {: RESULT = new BinaryTree(i, p, q);  :}
-            | quantifier:q LPAREN path_form:p IMPLIESTEMP path_form:r  RPAREN {: RESULT = new BinaryTree(q, p, r);  :}
-	    ;
-
-quantifier ::= EXIST:e {: RESULT = e ; :}
-            | FORALL:f {: RESULT = f ; :}
-	    | PERMISSION:p {: RESULT = p ; :}      
-	    | OBLIGATION:o {: RESULT = o ; :}
-            | RECOVERY:r {: RESULT = r ;  :}
-	    ;
