@@ -113,5 +113,46 @@ public class Formula implements DCTLFormula {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	@Override
+	public String toString() {
+		String _op = null, _res = null;
+		switch(this.t) {
+			//Atoms
+			case TRUE: _op = "True"; break;
+			case FALSE: _op = "False"; break;
+			case PROPOSITION: _op = this._prop_name; break;
+			
+			// Propositional operators
+			case NEGATION: _op = "!"; break;
+			case OR: _op = "||"; break;
+			case AND: _op = "&&"; break;
+			case IMPLIES: _op = "->"; break;
+			
+			// Quantifiers
+			case FORALL: _op = "A"; break;
+			case EXISTS: _op = "E"; break;
+			case PERMISSION: _op = "P"; break;
+			case OBLIGATION: _op = "O"; break;
+			
+			// Path operators
+			case NEXT: _op = "X"; break;
+			case UNTIL: _op = "U"; break;
+			case WEAKUNTIL: _op = "W"; break;
+			case GLOBALLY: _op = "G"; break;
+			case FUTURE: _op = "F"; break;
+		}
+		
+		if (this.t.is_atom()) {
+			_res = _op;
+		} else if (this.t.is_unary()) {
+			_res = _op + this.args[0].toString();
+		} else if (this.t.is_binary()) {
+			_res = this.args[0].toString() + _op + this.args[1].toString();
+		} 
+		
+		return _res;
+	}
+	
 
 }

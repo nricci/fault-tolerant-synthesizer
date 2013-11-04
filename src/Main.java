@@ -11,6 +11,9 @@ public class Main {
 	public static void main(String[] args) {
 		try {
 			Set<DCTLFormula> s = Parser.parse_specification(args[0]);
+			for(DCTLFormula f : s) {
+				System.out.println(f);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

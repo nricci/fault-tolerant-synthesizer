@@ -28,13 +28,13 @@ import java_cup.runtime.SymbolFactory;
 "False" { return sf.newSymbol("Right Bracket",sym.FALSE, new String(yytext()) ); }
 [a-z][_a-z0-9]* { return sf.newSymbol("identifier",sym.ID, new String(yytext())); }
 "X" { return sf.newSymbol("Right Bracket",sym.NEXT, new String(yytext())); }
-"F" { return sf.newSymbol("Right Bracket",sym.NEXT, new String(yytext())); }
-"G" { return sf.newSymbol("Right Bracket",sym.NEXT, new String(yytext())); }
+"F" { return sf.newSymbol("Right Bracket",sym.FUTURE, new String(yytext())); }
+"G" { return sf.newSymbol("Right Bracket",sym.GLOBALLY, new String(yytext())); }
 "U" { return sf.newSymbol("Right Bracket",sym.UNTIL, new String(yytext()) ); }
 "!" { return sf.newSymbol("Right Bracket",sym.NEG, new String(yytext()) ); }
 "->" { return sf.newSymbol("Right Bracket",sym.IMPLIES, new String(yytext())); }
-"&&" { return sf.newSymbol("Right Bracket",sym.IMPLIES, new String(yytext())); }
-"||" { return sf.newSymbol("Right Bracket",sym.IMPLIES, new String(yytext())); }
+"&&" { return sf.newSymbol("Right Bracket",sym.AND, new String(yytext())); }
+"||" { return sf.newSymbol("Right Bracket",sym.OR, new String(yytext())); }
 [ \t\r\n\f] { /* ignore white space. */ }
 . { System.err.println("Illegal character: "+yytext()); }
 

@@ -44,7 +44,8 @@ precedence left FUTURE, GLOBALLY;
 precedence right NEXT;
 precedence right NEG;
 
-specification ::= formula:f specification	{: parser._spec.add(f); :}
+specification ::= 	formula:f specification	{: parser._spec.add(f); :}
+				|	formula:f				{: parser._spec.add(f); :}
 			;
 
 formula ::= state_form:s SEMI {: RESULT = s; :}
