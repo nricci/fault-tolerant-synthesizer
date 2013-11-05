@@ -1,4 +1,4 @@
-<project name="Fault Tolerance Snthesizer" default="compile" basedir=".">
+<project name="Fault Tolerance Snthesizer" default="compile_parser" basedir=".">
   
   <property name="src"     location="src"     />
   <property name="lib"     location="lib"     />
@@ -62,7 +62,9 @@
   <target name="jflex" depends="init">
     <jflex file="${jflex}/Scanner.jflex" destdir="${cup_output}" />
   </target>
-
+  
+  <target name="compile_parser" depends="cup,jflex"/>
+  
   <target name="compile" depends="cup,jflex">
     <javac srcdir="${src}" destdir="${bin}">
       <classpath refid="libraries" />

@@ -1,5 +1,6 @@
 package dctl.formulas;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class Formula implements DCTLFormula {
@@ -44,73 +45,77 @@ public class Formula implements DCTLFormula {
 
 	@Override
 	public boolean is_atom() {
-		// TODO Auto-generated method stub
-		return false;
+		return this.t.is_atom();
 	}
 
 	@Override
 	public boolean is_unary() {
-		// TODO Auto-generated method stub
-		return false;
+		return this.t.is_unary();
 	}
 
 	@Override
 	public boolean is_binary() {
-		// TODO Auto-generated method stub
-		return false;
+		return this.t.is_binary();
 	}
 
 	@Override
 	public boolean is_state_formula() {
-		// TODO Auto-generated method stub
-		return false;
+		return !this.t.is_path_operator();
 	}
 
 	@Override
 	public boolean is_path_formula() {
-		// TODO Auto-generated method stub
-		return false;
+		return this.t.is_path_operator();
 	}
 
 	@Override
 	public boolean is_elementary() {
-		// TODO Auto-generated method stub
-		return false;
+		return this.t.equals(Type.NEXT) || this.is_atom();
 	}
 
 	@Override
 	public boolean is_alpha() {
-		// TODO Auto-generated method stub
+		if(this.t.equals(Type.NEGATION)) {
+			return this.args[0].is_beta();
+		} else if(this.t.equals(Type.AND) || this.t.equals(Type.FORALL)
+				|| this.t.equals(Type.OBLIGATION)) {
+			return true;
+		}		
 		return false;
 	}
 
 	@Override
 	public boolean is_beta() {
-		// TODO Auto-generated method stub
+		if(this.t.equals(Type.NEGATION)) {
+			return this.args[0].is_alpha();
+		} else if(this.t.equals(Type.EXISTS) || this.t.equals(Type.IMPLIES)
+				|| this.t.equals(Type.OR) || this.t.equals(Type.PERMISSION)) {
+			return true;
+		}		
 		return false;
 	}
 
 	@Override
 	public DCTLFormula get_argument(int n) {
-		// TODO Auto-generated method stub
-		return null;
+		return args[n]; 
 	}
 
 	@Override
 	public Set<DCTLFormula> get_decomposition() {
-		// TODO Auto-generated method stub
+		Set<DCTLFormula> deco = new HashSet<DCTLFormula>();
 		return null;
 	}
 
 	@Override
 	public Type type() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.t;
 	}
 
 	@Override
 	public String prop_name() {
-		// TODO Auto-generated method stub
+		if (this.t.equals(Type.PROPOSITION)) {
+			return this._prop_name;
+		}
 		return null;
 	}
 	
@@ -146,9 +151,9 @@ public class Formula implements DCTLFormula {
 		if (this.t.is_atom()) {
 			_res = _op;
 		} else if (this.t.is_unary()) {
-			_res = _op + this.args[0].toString();
+			_res = _op + "(" + this.args[0].toString() + ")";
 		} else if (this.t.is_binary()) {
-			_res = this.args[0].toString() + _op + this.args[1].toString();
+			_res = "(" + this.args[0].toString() + " " + _op + " " + this.args[1].toString() + ")";
 		} 
 		
 		return _res;
