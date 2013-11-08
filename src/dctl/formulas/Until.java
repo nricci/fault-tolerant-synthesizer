@@ -1,8 +1,5 @@
 package dctl.formulas;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public final class Until extends PathFormula implements BinaryExpr {
 
 	private StateFormula _left;
@@ -42,5 +39,15 @@ public final class Until extends PathFormula implements BinaryExpr {
 	public boolean is_elementary() {
 		return false;
 	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof Until) {
+			return ((Until) o).arg_left().equals(arg_left()) 
+				&& ((Until) o).arg_right().equals(arg_right());
+		}
+		return false;
+	}
+	
 	
 }

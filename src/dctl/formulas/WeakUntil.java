@@ -1,7 +1,5 @@
 package dctl.formulas;
 
-import java.util.Set;
-
 public final class WeakUntil extends PathFormula implements BinaryExpr {
 
 	private StateFormula _left;
@@ -39,6 +37,15 @@ public final class WeakUntil extends PathFormula implements BinaryExpr {
 
 	@Override
 	public boolean is_elementary() {
+		return false;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof WeakUntil) {
+			return ((WeakUntil) o).arg_left().equals(arg_left()) 
+				&& ((WeakUntil) o).arg_right().equals(arg_right());
+		}
 		return false;
 	}
 

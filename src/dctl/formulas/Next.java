@@ -1,7 +1,5 @@
 package dctl.formulas;
 
-import java.util.Set;
-
 public final class Next extends PathFormula implements UnaryExpr {
 
 	private StateFormula _arg;
@@ -32,6 +30,14 @@ public final class Next extends PathFormula implements UnaryExpr {
 	@Override
 	public boolean is_elementary() {
 		return true;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof Next) {
+			return ((Next) o).arg().equals(arg());
+		}
+		return false;
 	}
 
 }

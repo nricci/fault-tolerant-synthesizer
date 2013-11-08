@@ -52,6 +52,14 @@ public final class Or extends PropositionalFormula implements BinaryExpr {
 		return arg_left().toString() + "||" + arg_right().toString();
 	}
 
-
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof Or) {
+			return ((Or) o).arg_left().equals(arg_left()) 
+				&& ((Or) o).arg_right().equals(arg_right());
+		}
+		return false;
+	}
+	
 
 }

@@ -1,7 +1,5 @@
 package dctl.formulas;
 
-import java.util.Set;
-
 public abstract class PathFormula extends Formula {
 
 	@Override

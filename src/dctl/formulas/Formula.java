@@ -1,7 +1,5 @@
 package dctl.formulas;
 
-import java.util.Set;
-
 public abstract class Formula {
 
 	public abstract boolean is_state_formula();
@@ -13,8 +11,6 @@ public abstract class Formula {
 	public abstract boolean is_alpha();
 
 	public abstract boolean is_beta();
-
-	
 
 	
 }

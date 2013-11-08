@@ -6,4 +6,11 @@ public final class True extends Atom {
 		return "True";
 	}
 	
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof True)
+			return true;
+		return false;
+	}
+	
 }

@@ -35,4 +35,12 @@ public final class Exists extends Quantifier {
 		return "E(" + arg().toString() + ")";
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof Exists) {
+			return ((Exists) o).arg().equals(arg());
+		}
+		return false;
+	}
+	
 }

@@ -16,4 +16,12 @@ public final class Proposition extends Atom {
 		return _name;
 	}
 	
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof Proposition) {
+			return ((Proposition) o).name().equals(this.name());
+		}
+		return false;
+	}
+	
 }

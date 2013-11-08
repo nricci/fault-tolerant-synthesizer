@@ -51,6 +51,16 @@ public final class And extends PropositionalFormula implements BinaryExpr {
 	public String toString() {
 		return arg_left().toString() + "&&" + arg_right().toString();
 	}
+	
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof And) {
+			return ((And) o).arg_left().equals(arg_left()) 
+				&& ((And) o).arg_right().equals(arg_right());
+		}
+		return false;
+	}
 
 
 
