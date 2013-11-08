@@ -1,47 +1,45 @@
 package dctl.formulas;
 
-public class WeakUntil extends PathFormula implements DCTLBinaryExpression {
+import java.util.Set;
+
+public final class WeakUntil extends PathFormula implements BinaryExpr {
+
+	private StateFormula _left;
+	
+	private StateFormula _right;
+	
+	public WeakUntil(StateFormula l, StateFormula r) {
+		_left = l;
+		_right = r;
+	}
+	
+	@Override
+	public StateFormula arg_left() {
+		return _left;
+	}
 
 	@Override
-	public boolean is_constant() {
-		// TODO Auto-generated method stub
+	public StateFormula arg_right() {
+		return _right;
+	}
+
+	@Override
+	public boolean is_alpha() {
 		return false;
 	}
 
 	@Override
-	public boolean is_unary() {
-		// TODO Auto-generated method stub
+	public boolean is_beta() {
+		return true;
+	}
+
+	public String toString() {
+		return arg_left().toString() + "W" + arg_right().toString();
+	}
+
+	@Override
+	public boolean is_elementary() {
 		return false;
-	}
-
-	@Override
-	public boolean is_binary() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean is_state_formula() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean is_path_formula() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public DCTLExpression arg1() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public DCTLExpression arg2() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

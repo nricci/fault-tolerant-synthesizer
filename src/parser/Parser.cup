@@ -8,14 +8,14 @@ import java.util.HashSet;
 
 parser code {:
 
-	Set<DCTLFormula> _spec;
+	Set<StateFormula> _spec;
 
-	public static Set<DCTLFormula> parse_specification(String file) throws Exception{
+	public static Set<StateFormula> parse_specification(String file) throws Exception{
 		if (file == null) 
 			throw new Exception("The path to the file containing the specification must be supplied.");
 		SymbolFactory sf = new DefaultSymbolFactory();
 		Parser p = new Parser(new Scanner(new java.io.FileInputStream(file),sf),sf);
-		p._spec = new HashSet<DCTLFormula>();
+		p._spec = new HashSet<StateFormula>();
 		p.parse();		
 		return p._spec;
 	}
@@ -34,7 +34,8 @@ terminal String EXISTS, FORALL, PERMISSION, OBLIGATION;
 terminal String NEXT, UNTIL, FUTURE, GLOBALLY;
 
 non terminal specification;
-non terminal DCTLFormula formula, path_form, state_form;
+non terminal StateFormula formula, state_form;
+non terminal PathFormula path_form;
 
 precedence left IMPLIES;
 precedence left OR;
@@ -51,23 +52,23 @@ specification ::= 	formula:f specification	{: parser._spec.add(f); :}
 formula ::= state_form:s SEMI {: RESULT = s; :}
            ; 
 
-state_form 	::=	TRUE									{: RESULT = new Formula(Type.TRUE,null);	:}
-			|	FALSE									{: RESULT = new Formula(Type.FALSE,null); 	:}
-            | 	ID:i 									{: RESULT = new Formula(Type.PROPOSITION, i);  	:}
-	    	| 	NEG state_form:p 						{: RESULT = new Formula(Type.NEGATION, null, p);		:} 
-	    	| 	state_form:p AND state_form:q 			{: RESULT = new Formula(Type.AND, null, p, q);	:}    
-	    	| 	state_form:p OR state_form:q 			{: RESULT = new Formula(Type.OR, null, p, q);	:}
-	    	| 	state_form:p IMPLIES state_form:q 		{: RESULT = new Formula(Type.IMPLIES, null, p, q); :}
+state_form 	::=	TRUE									{: RESULT = new True();	:}
+			|	FALSE									{: RESULT = new False(); :}
+            | 	ID:i 									{: RESULT = new Proposition(i);  	:}
+	    	| 	NEG state_form:p 						{: RESULT = new Negation(p);		:} 
+	    	| 	state_form:p AND state_form:q 			{: RESULT = new And(p,q);	:}    
+	    	| 	state_form:p OR state_form:q 			{: RESULT = new Or(p,q);	:}
+	    	| 	state_form:p IMPLIES state_form:q 		{: RESULT = new Or(new Negation(p), q); :}
 	    	|	LPAREN state_form:p RPAREN				{: RESULT = p; :}
-            | 	EXISTS LPAREN path_form:p RPAREN 		{: RESULT = new Formula(Type.EXISTS, null, p); :}
-            | 	FORALL LPAREN path_form:p RPAREN 		{: RESULT = new Formula(Type.FORALL, null, p); :}
-            | 	OBLIGATION LPAREN path_form:p RPAREN 	{: RESULT = new Formula(Type.OBLIGATION, null, p); :}
-            | 	PERMISSION LPAREN path_form:p RPAREN	{: RESULT = new Formula(Type.PERMISSION, null, p); :}
+            | 	EXISTS LPAREN path_form:p RPAREN 		{: RESULT = new Exists(p); :}
+            | 	FORALL LPAREN path_form:p RPAREN 		{: RESULT = new Forall(p); :}
+            | 	OBLIGATION LPAREN path_form:p RPAREN 	{: RESULT = new Obligation(p); :}
+            | 	PERMISSION LPAREN path_form:p RPAREN	{: RESULT = new Permission(p); :}
 	    ;
 
-path_form ::=	NEXT state_form:p 						{: RESULT = new Formula(Type.NEXT, null, p); 	:}
-			|	FUTURE state_form:p 			 		{: RESULT = new Formula(Type.FUTURE, null, p); 	:}
-			|	GLOBALLY state_form:p			 		{: RESULT = new Formula(Type.GLOBALLY, null, p); :}
-			|	state_form:p UNTIL:u state_form:q 		{: RESULT = new Formula(Type.UNTIL, null, p, q); :}
+path_form ::=	NEXT state_form:p 						{: RESULT = new Next(p); 	:}
+			|	FUTURE state_form:p 			 		{: RESULT = new Until(new True(), p); 	:}
+			|	GLOBALLY state_form:p			 		{: RESULT = new WeakUntil(p, new False()); :}
+			|	state_form:p UNTIL:u state_form:q 		{: RESULT = new Until(p, q); :}
 		;
           

@@ -1,62 +1,60 @@
 package dctl.formulas;
 
-public class Negation extends StateFormula implements DCTLUnaryExpression {
+import java.util.HashSet;
+import java.util.Set;
+
+public final class Negation extends PropositionalFormula implements UnaryExpr {
+
+	private StateFormula _arg;
 	
-	private StateFormula _arg0;
-
-	@Override
-	public boolean is_constant() {
-		// TODO Auto-generated method stub
-		return false;
+	public Negation(StateFormula arg) {
+		_arg = arg;
 	}
 
 	@Override
-	public boolean is_unary() {
-		// TODO Auto-generated method stub
-		return false;
+	public StateFormula arg() {
+		return _arg;
 	}
-
-	@Override
-	public boolean is_binary() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean is_state_formula() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean is_path_formula() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
+	
 	@Override
 	public boolean is_elementary() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
+		return arg().is_elementary();
+	}	
+	
 	@Override
 	public boolean is_alpha() {
-		// TODO Auto-generated method stub
-		return false;
+		if (arg().is_elementary())
+			return false;
+		else
+			return !arg().is_alpha();
 	}
 
 	@Override
 	public boolean is_beta() {
-		// TODO Auto-generated method stub
-		return false;
+		if (arg().is_elementary())
+			return false;
+		else
+			return !arg().is_alpha();
 	}
 
 	@Override
-	public DCTLExpression arg() {
-		// TODO Auto-generated method stub
-		return null;
+	public Set<StateFormula> get_decomposition() {
+		if (arg().is_elementary())
+			return null;
+		else {
+			Set<StateFormula> deco = new HashSet<StateFormula>();
+			for(StateFormula _f : arg().get_decomposition())
+				deco.add(_f.negate());
+			return deco;
+		}
+			
 	}
 	
+	public StateFormula negate() {
+		return this.arg();
+	}
 
+	public String toString() {
+		return "!" + arg().toString();
+	}
 }

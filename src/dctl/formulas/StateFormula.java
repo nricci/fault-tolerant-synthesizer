@@ -1,12 +1,23 @@
 package dctl.formulas;
 
-public abstract class StateFormula implements DCTLFormula {
+import java.util.Set;
 
-	public abstract boolean is_elementary();
+public abstract class StateFormula extends Formula {
+
+	@Override
+	public final boolean is_state_formula() {
+		return true;
+	}
+
+	@Override
+	public final boolean is_path_formula() {
+		return false;
+	}
 	
-	public abstract boolean is_alpha(); 
+	public StateFormula negate() {
+		return new Negation(this);
+	}
 	
-	public abstract boolean is_beta();
-	
-	
+	public abstract Set<StateFormula> get_decomposition();
+
 }

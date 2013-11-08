@@ -1,59 +1,38 @@
 package dctl.formulas;
 
-public class Exists extends StateFormula implements DCTLUnaryExpression {
+import java.util.HashSet;
+import java.util.Set;
 
-	@Override
-	public boolean is_constant() {
-		// TODO Auto-generated method stub
-		return false;
+public final class Exists extends Quantifier {
+
+	public Exists(PathFormula arg) {
+		this._arg = arg;
 	}
-
+	
 	@Override
-	public boolean is_unary() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean is_binary() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean is_state_formula() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean is_path_formula() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public DCTLExpression arg() {
-		// TODO Auto-generated method stub
+	public Set<StateFormula> get_decomposition() {
+		if (_arg instanceof Next) 
+			return null;
+		else if (_arg instanceof Until) {
+			Set<StateFormula> deco = new HashSet<StateFormula>();
+			deco.add(((Until) _arg).arg_right());
+			StateFormula p = new Exists(new Next(this));
+			p = new And(((Until) _arg).arg_left(),p);
+			deco.add(p);
+			return deco;
+		} else if (_arg instanceof WeakUntil) {
+			Set<StateFormula> deco = new HashSet<StateFormula>();
+			deco.add(((WeakUntil) _arg).arg_right());
+			StateFormula p = new Exists(new Next(this));
+			p = new And(((WeakUntil) _arg).arg_left(),p);
+			deco.add(p);
+			return deco;
+		}
 		return null;
 	}
-
-	@Override
-	public boolean is_elementary() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean is_alpha() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean is_beta() {
-		// TODO Auto-generated method stub
-		return false;
+	
+	public String toString() {
+		return "E(" + arg().toString() + ")";
 	}
 
 }
