@@ -30,6 +30,12 @@ public class BinaryTree<E> {
 		this.right = right;
 	}
 	
+	public BinaryTree<E> left() {return this.left;}
+	
+	public BinaryTree<E> right() {return this.right;}
+
+	
+	
 	public E val() {return this.value;}
 	
 	public void printInOrder(){

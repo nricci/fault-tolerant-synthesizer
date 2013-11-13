@@ -15,13 +15,33 @@ public final class Proposition extends Atom {
 	public String toString() {
 		return _name;
 	}
-	
+
 	@Override
-	public boolean equals(Object o) {
-		if (o instanceof Proposition) {
-			return ((Proposition) o).name().equals(this.name());
-		}
-		return false;
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((_name == null) ? 0 : _name.hashCode());
+		return result;
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Proposition other = (Proposition) obj;
+		if (_name == null) {
+			if (other._name != null)
+				return false;
+		} else if (!_name.equals(other._name))
+			return false;
+		return true;
+	}
+
+	
+	
 	
 }

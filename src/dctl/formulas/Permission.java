@@ -35,12 +35,6 @@ public final class Permission extends Quantifier {
 		return "P(" + arg().toString() + ")";
 	}
 	
-	@Override
-	public boolean equals(Object o) {
-		if (o instanceof Permission) {
-			return ((Permission) o).arg().equals(arg());
-		}
-		return false;
-	}
+
 
 }

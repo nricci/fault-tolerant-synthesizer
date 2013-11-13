@@ -35,12 +35,6 @@ public final class Forall extends Quantifier {
 		return "A(" + arg().toString() + ")";
 	}
 	
-	@Override
-	public boolean equals(Object o) {
-		if (o instanceof Forall) {
-			return ((Forall) o).arg().equals(arg());
-		}
-		return false;
-	}
+
 	
 }

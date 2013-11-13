@@ -24,5 +24,7 @@ public abstract class Atom extends StateFormula {
 	public Set<StateFormula> get_decomposition() {
 		return null;	
 	}
+	
+	
 
 }

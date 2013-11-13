@@ -35,12 +35,4 @@ public final class Obligation extends Quantifier {
 		return "O(" + arg().toString() + ")";
 	}
 	
-	@Override
-	public boolean equals(Object o) {
-		if (o instanceof Obligation) {
-			return ((Obligation) o).arg().equals(arg());
-		}
-		return false;
-	}
-	
 }
