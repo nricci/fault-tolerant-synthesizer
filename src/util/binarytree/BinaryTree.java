@@ -1,24 +1,37 @@
 package util.binarytree;
 
-public class BinaryTree {
+import java.util.HashSet;
+import java.util.Set;
+
+public class BinaryTree<E> {
 
 
-	private  BinaryTree left;
-	private  BinaryTree right;
-	private  Object value;
+	private  BinaryTree<E> left;
+	private  BinaryTree<E> right;
+	private  E value;
 
-	public BinaryTree(Object value) {
+	public BinaryTree(E value) {
 		this.left = null ;
 		this.right = null ;
-		this.value = value ;
+		this.value = value;
 	} 
 
-	public BinaryTree(Object value, BinaryTree left, BinaryTree right) {
+	public BinaryTree(E value, BinaryTree<E> left, BinaryTree<E> right) {
 		this.value = value;
 		this.left= left;
 		this.right = right;
 	}
-
+	
+	public void set_left(BinaryTree<E> left) {
+		this.left = left;
+	}
+	
+	public void set_right(BinaryTree<E> right) {
+		this.right = right;
+	}
+	
+	public E val() {return this.value;}
+	
 	public void printInOrder(){
 		if (this!=null && this.value != null) {                  
 			if (this.left != null)
