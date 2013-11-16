@@ -19,16 +19,12 @@ public class OrNode extends TableauxNode {
 	}
 	
 	public Set<AndNode> blocks() {
-		Set<Set<StateFormula>> decomposition = new HashSet<Set<StateFormula>>();
-		decomposition.add(this.formulas);
-		
-		
-		
-		SetUtils.filter(this.formulas, new Predicate<StateFormula>() {
-			public boolean eval(StateFormula _arg) {return _arg.is_elementary();}
-		});
-		
-		return null;
+		BinaryTree<Set<StateFormula>> t = new BinaryTree<Set<StateFormula>>(formulas);
+		Set<AndNode> result = new HashSet<AndNode>();		
+		for(Set<StateFormula> s : closure(t)) {
+			result.add(new AndNode(s));
+		}		
+		return result;
 	}
 	
 	/*	Auxiliary Predicates
@@ -38,15 +34,7 @@ public class OrNode extends TableauxNode {
 		public boolean eval(StateFormula _arg) {return !_arg.is_elementary();}
 	};
 	
-	
-	private Set<Set<Formula>> decompose(Set<Formula> set) {
-
-		return null;
-			
-	}
-	
 	public Set<Set<StateFormula>> closure(BinaryTree<Set<StateFormula>> t) {
-		System.out.println("Closure of : " + t.val());
 		StateFormula f = pick(t.val(),is_non_elementary);
 		if (f == null) {
 			Set<Set<StateFormula>> r = new HashSet<Set<StateFormula>>();
@@ -73,7 +61,6 @@ public class OrNode extends TableauxNode {
 					deco[i] = f2;
 					i++;
 				}
-				System.out.println(deco);
 				Set<StateFormula> l_temp = union(minus(t.val(),f),deco[0]);
 				Set<StateFormula> r_temp = union(minus(t.val(),f),deco[1]);
 
