@@ -1,0 +1,32 @@
+digraph G {
+  node259880326 [ label="[A(E(TrueUp)WFalse)]" ];
+  node890805028 [ label="[A(E(TrueUp)WFalse)
+ p
+ E(TrueUp)&&A(X(A(E(TrueUp)WFalse)))
+ E(TrueUp)
+ A(X(A(E(TrueUp)WFalse)))]" ];
+  node1055642008 [ label="[True
+ True&&E(X(E(TrueUp)))
+ A(E(TrueUp)WFalse)
+ E(TrueUp)&&A(X(A(E(TrueUp)WFalse)))
+ E(TrueUp)
+ A(X(A(E(TrueUp)WFalse)))
+ E(X(E(TrueUp)))]" ];
+  node1615693953 [ label="[A(E(TrueUp)WFalse)
+ E(TrueUp)]" ];
+  node1875574310 [ label="[E(TrueUp)]" ];
+  node1875574453 [ label="[p
+ E(TrueUp)]" ];
+  node472945807 [ label="[True
+ True&&E(X(E(TrueUp)))
+ E(TrueUp)
+ E(X(E(TrueUp)))]" ];
+  node259880326 -> node890805028 [ label="" ];
+  node259880326 -> node1055642008 [ label="" ];
+  node1055642008 -> node1615693953 [ label="" ];
+  node1615693953 -> node890805028 [ label="" ];
+  node1615693953 -> node1055642008 [ label="" ];
+  node1875574310 -> node1875574453 [ label="" ];
+  node1875574310 -> node472945807 [ label="" ];
+  node472945807 -> node1875574310 [ label="" ];
+}
