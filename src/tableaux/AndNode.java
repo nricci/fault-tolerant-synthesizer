@@ -6,7 +6,6 @@ import static util.SetUtils.union;
 import static util.SetUtils.filter;
 import static util.SetUtils.map;
 
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,6 +18,7 @@ import dctl.formulas.Formula;
 import dctl.formulas.Next;
 import dctl.formulas.Quantifier;
 import dctl.formulas.StateFormula;
+import dctl.formulas.True;
 
 public class AndNode extends TableauxNode {
 	
@@ -81,11 +81,18 @@ public class AndNode extends TableauxNode {
 		}		
 	};
 	
-	public Set<Set<StateFormula>> generate_succesors(Set<StateFormula> s) {
+	private Set<Set<StateFormula>> generate_succesors(Set<StateFormula> s) {
 		Set<StateFormula> existential_formulas = filter(s,is_existential);
 		Set<StateFormula> universal_formulas = filter(s,is_universal);
 		
 		Set<Set<StateFormula>> res = new HashSet<Set<StateFormula>>();
+		
+		if(existential_formulas.isEmpty() && universal_formulas.isEmpty())
+			// return empty res
+			return res;
+		
+		if (existential_formulas.isEmpty() && !universal_formulas.isEmpty())
+			existential_formulas.add(new Exists(new Next(new True())));
 		
 		if (!existential_formulas.isEmpty()) {
 			for(StateFormula f : existential_formulas) {

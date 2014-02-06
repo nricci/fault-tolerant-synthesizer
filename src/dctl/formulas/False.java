@@ -13,4 +13,9 @@ public final class False extends Atom {
 		return false;
 	}
 	
+	@Override
+	public int hashCode() {
+		return 1;
+	}
+	
 }

@@ -7,7 +7,7 @@ import dctl.formulas.StateFormula;
 
 public abstract class TableauxNode {
 
-	protected Set<StateFormula> formulas;
+	public Set<StateFormula> formulas;
 
 	@Override
 	public int hashCode() {
