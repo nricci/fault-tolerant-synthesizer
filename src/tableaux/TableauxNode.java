@@ -1,6 +1,7 @@
 package tableaux;
 
 import java.util.Set;
+
 import dctl.formulas.Formula;
 import dctl.formulas.StateFormula;
 
@@ -8,11 +9,14 @@ import dctl.formulas.StateFormula;
 public abstract class TableauxNode {
 
 	public Set<StateFormula> formulas;
+	
+	public boolean faulty;
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + (faulty ? 1231 : 1237);
 		result = prime * result
 				+ ((formulas == null) ? 0 : formulas.hashCode());
 		return result;
@@ -27,6 +31,8 @@ public abstract class TableauxNode {
 		if (getClass() != obj.getClass())
 			return false;
 		TableauxNode other = (TableauxNode) obj;
+		if (faulty != other.faulty)
+			return false;
 		if (formulas == null) {
 			if (other.formulas != null)
 				return false;

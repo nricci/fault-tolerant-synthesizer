@@ -70,6 +70,11 @@ public final class Until extends PathFormula implements BinaryExpr {
 			return false;
 		return true;
 	}
+
+	@Override
+	public Formula obligation_formula() {
+		return new Until((StateFormula) _left.obligation_formula(),(StateFormula) _right.obligation_formula());
+	}
 	
 
 	

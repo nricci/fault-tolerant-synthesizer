@@ -56,6 +56,11 @@ public final class Next extends PathFormula implements UnaryExpr {
 			return false;
 		return true;
 	}
+
+	@Override
+	public Formula obligation_formula() {
+		return new Next((StateFormula) _arg.obligation_formula());
+	}
 	
 
 

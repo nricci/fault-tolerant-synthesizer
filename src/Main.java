@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,13 +23,15 @@ import util.binarytree.BinaryTree;
 import dctl.formulas.*;
 
 public class Main {
-
+	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		try {
 			Set<StateFormula> s = Parser.parse_specification(args[0]);
+			long start_time = System.currentTimeMillis();
+			
 			Tableaux t = new Tableaux(s);
 			
 			int stage = 0;
@@ -38,19 +41,28 @@ public class Main {
 			do {
 				changes = t.expand();
 				System.out.println("expand: " + changes + " changes introduced.");
-				Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
+				//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
 			} while (t.frontier());
 			
 			changes = 0;
 			do {
 				changes = t.delete_inconsistent();
 				System.out.println("delete: " + changes + " nodes removed.");
-				Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
+				//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
 
 			} while (changes > 0);
 			
-			Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
+			//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
 			System.out.println("delete: " + t.delete_unreachable() + " unreachable nodes removed.");
+			System.out.println("deontic: " + t.detect_elementary_faults() + " faults detected.");
+			//System.out.println("deontic: " + t.inject_faults() + " faults injected.");
+			
+			//do {
+			//	System.out.println("expand: " + t.expand() + " changes introduced.");
+			//	System.out.println("deontic: " + t.inject_faults() + " faults injected.");
+			//} while (t.frontier());			
+			
+			
 			Graph g = t.get_graph();
 			HashMap<TableauxNode,String> tags = new HashMap<TableauxNode, String>();
 			for(Object o : g.vertexSet()) {
@@ -59,87 +71,49 @@ public class Main {
 			}
 			Tableaux.to_dot_with_tags("output/final_tableaux.dot", t.get_graph(),tags);
 			System.out.println(stage);
+			System.out.println(t.get_graph().vertexSet().size());
 			
 			
-			int i = 0;
-			
-			for(Object o : g.vertexSet()) {
-				TableauxNode n = (TableauxNode) o;				
-				if (n instanceof OrNode) continue;
-				/*
-				 * 		TESTING DAG(-,-)
-				 * 
-				*/
-				for(StateFormula f : n.formulas) {
-					if(f instanceof Quantifier) {
-						Quantifier q = (Quantifier) f;
-						if(q.arg() instanceof Until) {
-							try {
-								System.out.println("Testing dag with: " + n + " and formula " + f);
-								Tableaux.to_dot("output/dag" + f.toString() + "_" + n + ".dot", t.dag((AndNode) n,(Quantifier) f));
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-						}
-					}
-				}
-				/*
-				 * 		TESTING FRAG(-)
-				*/	
-				try {
-					System.out.println("Testing frag with: " + n);
-					Tableaux.frag_to_dot("output/frag" + n + ".dot", t.frag((AndNode) n));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			
+//			int i = 0;
+//			
+//			for(Object o : g.vertexSet()) {
+//				TableauxNode n = (TableauxNode) o;				
+//				if (n instanceof OrNode) continue;
+//				/*
+//				 * 		TESTING DAG(-,-)
+//				 * 
+//				*/
+//				for(StateFormula f : n.formulas) {
+//					if(f instanceof Quantifier) {
+//						Quantifier q = (Quantifier) f;
+//						if(q.arg() instanceof Until) {
+//							try {
+//								System.out.println("Testing dag with: " + n + " and formula " + f);
+//								Tableaux.to_dot("output/dag" + f.toString() + "_" + n + ".dot", t.dag((AndNode) n,(Quantifier) f));
+//							} catch (Exception e) {
+//								e.printStackTrace();
+//							}
+//						}
+//					}
+//				}
+//				/*
+//				 * 		TESTING FRAG(-)
+//				*/	
+//				try {
+//					System.out.println("Testing frag with: " + n);
+//					Tableaux.frag_to_dot("output/frag" + n + ".dot", t.frag((AndNode) n));
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			}
+
+			long end_time = System.currentTimeMillis();
+			System.out.println("total synthesis time: " +  (end_time - start_time) + " ms.");	
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-
-	
-	public static String to_dot(String file, Graph graph) {
-		DOTExporter<TableauxNode, DefaultEdge> expo = new DOTExporter<TableauxNode, DefaultEdge>(
-				new VertexNameProvider<TableauxNode>() {
-	
-					
-					@Override
-					public String getVertexName(TableauxNode arg0) {
-						int i = arg0.hashCode();
-						if (i<0) i = i*-1;
-						return "node"+i;
-					}
-				},
-				new VertexNameProvider<TableauxNode>() {
-	
-					@Override
-					public String getVertexName(TableauxNode arg0) {
-						return arg0.formulas.toString().replace(',', '\n');
-					}
-				},
-				new EdgeNameProvider<DefaultEdge>() {
-	
-					@Override
-					public String getEdgeName(DefaultEdge arg0) {
-						return "";
-					}
-				}			
-				);
-		try {
-			expo.export(new FileWriter(new File(file)), graph);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	
-
-
 
 
 

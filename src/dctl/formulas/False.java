@@ -17,5 +17,10 @@ public final class False extends Atom {
 	public int hashCode() {
 		return 1;
 	}
+
+	@Override
+	public Formula obligation_formula() {
+		return new False();
+	}
 	
 }

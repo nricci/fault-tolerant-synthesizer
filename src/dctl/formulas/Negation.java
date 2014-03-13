@@ -34,7 +34,7 @@ public final class Negation extends PropositionalFormula implements UnaryExpr {
 		if (arg().is_elementary())
 			return false;
 		else
-			return !arg().is_alpha();
+			return !arg().is_beta();
 	}
 
 	@Override
@@ -82,4 +82,12 @@ public final class Negation extends PropositionalFormula implements UnaryExpr {
 			return false;
 		return true;
 	}
+	
+	
+	@Override
+	public Formula obligation_formula() {
+		return new Negation((StateFormula)_arg.obligation_formula());
+	}
+	
+	
 }

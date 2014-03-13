@@ -34,5 +34,10 @@ public final class Exists extends Quantifier {
 	public String toString() {
 		return "E(" + arg().toString() + ")";
 	}
+
+	@Override
+	public Formula obligation_formula() {
+		return new Exists((PathFormula) _arg.obligation_formula());
+	}
 	
 }

@@ -35,6 +35,10 @@ public final class Forall extends Quantifier {
 		return "A(" + arg().toString() + ")";
 	}
 	
+	@Override
+	public Formula obligation_formula() {
+		return new Forall((PathFormula) _arg.obligation_formula());
+	}
 
 	
 }

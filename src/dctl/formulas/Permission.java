@@ -15,16 +15,16 @@ public final class Permission extends Quantifier {
 			return null;
 		else if (_arg instanceof Until) {
 			Set<StateFormula> deco = new HashSet<StateFormula>();
-			deco.add(((Until) _arg).arg_right());
-			StateFormula p = new Permission(new Next(this));
-			p = new And(((Until) _arg).arg_left(),p);
+			deco.add((StateFormula) ((Until) _arg).arg_right().obligation_formula());
+			StateFormula p = new Exists(new Next(this));
+			p = new And((StateFormula) ((Until) _arg).arg_left().obligation_formula(),p);
 			deco.add(p);
 			return deco;
 		} else if (_arg instanceof WeakUntil) {
 			Set<StateFormula> deco = new HashSet<StateFormula>();
-			deco.add(((WeakUntil) _arg).arg_right());
-			StateFormula p = new Permission(new Next(this));
-			p = new And(((WeakUntil) _arg).arg_left(),p);
+			deco.add((StateFormula) ((WeakUntil) _arg).arg_right().obligation_formula());
+			StateFormula p = new Exists(new Next(this));
+			p = new And((StateFormula) ((WeakUntil) _arg).arg_left().obligation_formula(),p);
 			deco.add(p);
 			return deco;
 		}
@@ -35,6 +35,9 @@ public final class Permission extends Quantifier {
 		return "P(" + arg().toString() + ")";
 	}
 	
-
+	@Override
+	public Formula obligation_formula() {
+		return new Permission((PathFormula) _arg.obligation_formula());
+	}
 
 }

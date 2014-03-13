@@ -11,6 +11,8 @@ public abstract class Formula {
 	public abstract boolean is_alpha();
 
 	public abstract boolean is_beta();
+	
+	public abstract Formula obligation_formula(); 
 
 	
 }

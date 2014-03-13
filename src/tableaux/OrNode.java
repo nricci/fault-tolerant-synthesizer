@@ -12,6 +12,7 @@ import util.binarytree.BinaryTree;
 public class OrNode extends TableauxNode {
 
 	public OrNode(Set<StateFormula> s) {
+		faulty = false;
 		this.formulas = s;
 		is_non_elementary = new Predicate<StateFormula>() {
 			public boolean eval(StateFormula _arg) {return !_arg.is_elementary();}
@@ -83,7 +84,7 @@ public class OrNode extends TableauxNode {
 				return res;
 			} else {
 				// Should not get here...
-				throw new Error("Should not have got here...");
+				throw new Error("Should not have got here: " + f + " is neither alpha nor beta. " +f.getClass());
 			}
 			
 		}

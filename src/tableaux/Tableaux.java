@@ -21,6 +21,8 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.Subgraph;
 
 import dctl.formulas.*;
+import fj.test.reflect.Main;
+
 
 public class Tableaux {
 	
@@ -28,6 +30,7 @@ public class Tableaux {
 	
 	private LinkedList<TableauxNode> frontier;
 	
+	private Set<TableauxNode> injected;	
 	
 	private Set<TableauxNode> to_check;
 	
@@ -40,9 +43,11 @@ public class Tableaux {
 		frontier = new LinkedList<TableauxNode>();
 		to_check = new HashSet<TableauxNode>();
 		to_delete = new HashSet<TableauxNode>();
+		injected = new HashSet<TableauxNode>();
 		root = new OrNode(spec);
 		graph.addVertex(root);		
 		frontier.add(root);
+		
 	}
 	
 	public DirectedGraph<TableauxNode, DefaultEdge> get_graph() {
@@ -239,14 +244,13 @@ public class Tableaux {
 		return false;
 	}
 	
-
-	@Deprecated
 	private boolean full_subdag(TableauxNode root, 
 								Set<TableauxNode> dag, 
 								StateFormula f, 
 								StateFormula g) 
 	{
 		if(dag.contains(root)) 
+			// There is a cycle
 			return false;
 		
 		Set<TableauxNode> new_dag = new HashSet<TableauxNode>();
@@ -265,15 +269,15 @@ public class Tableaux {
 			} else
 				return false;
 		} else if(root instanceof OrNode) {
-			if(!root.formulas.contains(f) && !(f instanceof True))
-				return false;
-			else  {
+			//if(!root.formulas.contains(f) && !(f instanceof True))
+			//	return false;
+			//else  {
 				boolean res = false;
 				for(DefaultEdge s : graph.outgoingEdgesOf(root)) {
 					res = res || full_subdag(graph.getEdgeTarget(s),new_dag,f,g);
 				}
 				return res;
-			}				
+			//}				
 		} else
 			throw new Error("Should not get here...");
 	}
@@ -281,7 +285,7 @@ public class Tableaux {
 
 	/*	Returns true iff the node is not immediately inconsistent 
 	*/
-	private boolean is_consistent(Set<StateFormula> s) {
+	public boolean is_consistent(Set<StateFormula> s) {
 		for(StateFormula f : s) {
 			if(f instanceof False)
 				return false;
@@ -292,6 +296,193 @@ public class Tableaux {
 		return true;
 	}
 
+	/* *******************************************
+	 * 
+	 * 					DEONTIC - FAULT DETECTION
+	 * 
+	 * ******************************************* 
+	*/
+	
+	public int detect_faults() {
+		int count = 0;
+		count += detect_elementary_faults();
+		return count;
+	}
+	
+	public int detect_elementary_faults() {
+		int count = 0;
+		
+		for(TableauxNode _n : graph.vertexSet()) {
+			if(_n instanceof AndNode) {
+				AndNode n = (AndNode) _n;
+				Set<Proposition> props = new HashSet<Proposition>();
+				Set<DeonticProposition> o_props = new HashSet<DeonticProposition>();
+				for(StateFormula f : n.formulas) {
+					if(f instanceof Proposition)
+						props.add((Proposition) f);
+					else if(f instanceof DeonticProposition)
+						o_props.add((DeonticProposition) f);
+				}
+				for(DeonticProposition d : o_props) {
+					Proposition p = new Proposition(d.name().substring(3));
+					if(!props.contains(p)) {
+						n.faulty = true;
+						count++;
+						break;
+					}
+				}
+			}
+		}
+		return count;
+	}
+	
+	/* VER ESTO COMO HACERLO BIEN PORQUE ES UN PERNO
+	 * 
+	 * 
+	public int detect_eventuality_faults() {
+		int count = 0;
+		
+		for(TableauxNode _n : graph.vertexSet()) {
+			if(_n instanceof AndNode) {
+				AndNode n = (AndNode) _n;
+				Set<Proposition> props = new HashSet<Proposition>();
+				Set<DeonticProposition> o_props = new HashSet<DeonticProposition>();
+				for(StateFormula f : n.formulas) {
+					if(f instanceof Proposition)
+						props.add((Proposition) f);
+					else if(f instanceof DeonticProposition)
+						o_props.add((DeonticProposition) f);
+				}
+				for(DeonticProposition d : o_props) {
+					Proposition p = new Proposition(d.name().substring(3));
+					if(!props.contains(p)) {
+						n.faulty = true;
+						count++;
+						break;
+					}
+				}
+			}
+		}
+		return count;
+	}
+	
+	private int detect_OU() {
+		int count = 0;
+		
+		for(TableauxNode n : graph.vertexSet()) {
+			if(n instanceof AndNode && !((AndNode) n).faulty)
+				for(StateFormula f : n.formulas) {
+					if ((f instanceof Obligation)
+						&& (((Obligation) f).arg() instanceof Until)
+						&& (!reach(n,new HashSet<TableauxNode>(),
+							((Until)(((Exists) f).arg())).arg_left(),
+							((Until)(((Exists) f).arg())).arg_right()))) {
+						delete_node(n);
+						count++;
+					}
+				}
+		}
+		return count;
+	}
+	
+	
+	private int detect_PU() {
+		int count = 0;
+		
+		for(TableauxNode n : graph.vertexSet()) {
+			for(StateFormula f : n.formulas) {
+				if ((f instanceof Forall)
+					&& (((Forall) f).arg() instanceof Until)
+					&& (!full_subdag(n,new HashSet<TableauxNode>(),
+						((Until)(((Forall) f).arg())).arg_left(),
+						((Until)(((Forall) f).arg())).arg_right()))) {
+					delete_node(n);
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+	
+	private boolean deontic_reach(TableauxNode root, 
+			Set<TableauxNode> visited, 
+			StateFormula f, 
+			StateFormula g,
+			boolean positive) 
+	
+	{
+		if(!visited.contains(root)) {
+			if(root instanceof AndNode && !((AndNode) root).faulty) {
+				Set<TableauxNode> new_visited = new HashSet<TableauxNode>();
+				new_visited.addAll(visited);
+				new_visited.add(root);
+				if(positive) {
+					if(root.formulas.contains(g))
+						return true;
+					else if(root.formulas.contains(f) || f instanceof True) {
+						boolean res = false;
+						for(DefaultEdge s : graph.outgoingEdgesOf(root)) {
+							visited.add(root);
+							res = res || reach(graph.getEdgeTarget(s),new_visited,f,g);
+						}
+						return res;
+					}
+				} else {
+					if(!root.formulas.contains(g))
+						return true;
+					else if(root.formulas.contains(f) || f instanceof True) {
+						boolean res = false;
+						for(DefaultEdge s : graph.outgoingEdgesOf(root)) {
+							visited.add(root);
+							res = res || reach(graph.getEdgeTarget(s),new_visited,f,g);
+						}
+						return res;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	*/
+	
+	/* *******************************************
+	 * 
+	 * 					DEONTIC - FAULT INJECTION
+	 * 
+	 * ******************************************* 
+	*/
+	
+	public int inject_faults() {
+		int count = 0;
+		LinkedList<TableauxNode> workset = new LinkedList<TableauxNode>(graph.vertexSet());
+		workset.removeAll(injected);
+		while(!workset.isEmpty()) {
+			TableauxNode n = workset.pop();
+			if(n instanceof AndNode) {
+				Set<Proposition> props = new HashSet<Proposition>();
+				for(StateFormula f : n.formulas) {
+					if(f instanceof Proposition && n.formulas.contains(new DeonticProposition(((Proposition) f).name())))
+						props.add((Proposition) f);
+				}	
+				
+				for(Proposition p : props) {
+					Set<StateFormula> s = new HashSet<StateFormula>(n.formulas);
+					s.remove(p);
+					s.add(new Negation(p));
+					OrNode fault = new OrNode(s);
+					fault.faulty = true;
+					graph.addVertex(fault);
+					graph.addEdge(n, fault);
+					frontier.add(fault);
+					count++;
+				}
+				injected.add(n);
+			}		
+		}		
+		return count;
+	}
+	
 
 	/* *******************************************
 	 * 
@@ -765,16 +956,22 @@ public class Tableaux {
 			AndNode current = (AndNode) pick_by_formula_set(frontier.poll().formulas);
 			for(TableauxNode or_succ : succesors(current,graph)) {
 				assert or_succ instanceof OrNode;
-				Subgraph g = new Subgraph(graph,null);
+				/*if(model.ver)
 				
 				
 				
-			}
+				Set non_fragment_roots = model.vertexSet();
+				non_fragment_roots.removeAll(fragment_roots);
+				Subgraph g = new Subgraph(graph,non_fragment_roots);
+				
+				
+				
+			*/}
 		}
 		
 		
 		
-		return model;		
+		return null;		
 	}	
 	
 	private AndNode choose_block(OrNode _node) {
@@ -903,7 +1100,9 @@ public class Tableaux {
 		HashMap<TableauxNode,String> map = new HashMap<TableauxNode, String>();
 		for(TableauxNode n : g.vertexSet()) {
 			map.put(n, "n"+i);
-			res += "n" + i++ + " [shape=" + ((n instanceof AndNode)?"box":"hexagon") + ",label=\"";
+			res += "n" + i++ + " [shape=" + ((n instanceof AndNode)?"box":"hexagon");
+			res += (n.faulty?",style=dotted":"");
+			res += ",label=\"";
 			res += "tag : " + tags.get(n) + "\n";
 			for(StateFormula f : n.formulas) {
 				res += f + "\n";

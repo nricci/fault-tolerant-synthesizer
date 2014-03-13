@@ -85,7 +85,10 @@ public final class Or extends PropositionalFormula implements BinaryExpr {
 		return true;
 	}
 
-
+	@Override
+	public Formula obligation_formula() {
+		return new Or((StateFormula)_left.obligation_formula(),(StateFormula)_right.obligation_formula());
+	}
 	
 
 }

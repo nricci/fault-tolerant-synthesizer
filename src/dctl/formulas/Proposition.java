@@ -41,6 +41,10 @@ public final class Proposition extends Atom {
 		return true;
 	}
 
+	@Override
+	public Formula obligation_formula() {
+		return new DeonticProposition(_name);
+	}
 	
 	
 	

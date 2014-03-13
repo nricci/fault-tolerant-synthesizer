@@ -22,7 +22,10 @@ import dctl.formulas.True;
 
 public class AndNode extends TableauxNode {
 	
+
+	
 	public AndNode(Set<StateFormula> s) {
+		faulty = false;
 		this.formulas = s;
 	}
 	
@@ -80,6 +83,8 @@ public class AndNode extends TableauxNode {
 			return remove_quantifier(arg);
 		}		
 	};
+
+
 	
 	private Set<Set<StateFormula>> generate_succesors(Set<StateFormula> s) {
 		Set<StateFormula> existential_formulas = filter(s,is_existential);
@@ -99,6 +104,7 @@ public class AndNode extends TableauxNode {
 				res.add(union(map(universal_formulas,remove_quantifier), remove_quantifier(f)));
 			}		
 		}
+		
 		return res;
 	}
 

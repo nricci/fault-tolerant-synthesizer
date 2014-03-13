@@ -18,4 +18,9 @@ public final class True extends Atom {
 		return 1;
 	}
 	
+	@Override
+	public Formula obligation_formula() {
+		return new True();
+	}
+	
 }
