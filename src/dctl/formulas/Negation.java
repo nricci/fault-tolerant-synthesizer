@@ -86,7 +86,10 @@ public final class Negation extends PropositionalFormula implements UnaryExpr {
 	
 	@Override
 	public Formula obligation_formula() {
-		return new Negation((StateFormula)_arg.obligation_formula());
+		if(_arg instanceof Proposition)
+			return new DeonticProposition(this);
+		else
+			return new Negation((StateFormula)_arg.obligation_formula());
 	}
 	
 	

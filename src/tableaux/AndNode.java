@@ -12,13 +12,7 @@ import java.util.Set;
 import util.Function;
 import util.Predicate;
 import util.binarytree.BinaryTree;
-import dctl.formulas.Exists;
-import dctl.formulas.Forall;
-import dctl.formulas.Formula;
-import dctl.formulas.Next;
-import dctl.formulas.Quantifier;
-import dctl.formulas.StateFormula;
-import dctl.formulas.True;
+import dctl.formulas.*;
 
 public class AndNode extends TableauxNode {
 	
@@ -37,6 +31,31 @@ public class AndNode extends TableauxNode {
 		}	
 		return res;
 	}
+	
+	public boolean sat(StateFormula f) {
+		assert(f instanceof Atom || f instanceof PropositionalFormula);
+		
+		if(f instanceof True)
+			return true;
+		else if(f instanceof False)
+			return false;
+		else if(f instanceof Proposition)
+			return formulas.contains(f);
+		else if(f instanceof DeonticProposition)
+			return this.faulty || sat(((DeonticProposition) f).get_prop());
+		else if(f instanceof And)
+			return sat(((And) f).arg_left()) && sat(((And) f).arg_right());
+		else if(f instanceof Or)
+			return sat(((Or) f).arg_left()) || sat(((Or) f).arg_right());		
+		else if(f instanceof Negation)
+			return !sat(((Negation) f).arg());	
+		else
+			throw new Error("Missing Case...");		
+	}
+	
+	
+	
+	
 	
 	/*	Auxiliary Predicates
 	 * 

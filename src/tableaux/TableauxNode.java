@@ -3,7 +3,9 @@ package tableaux;
 import java.util.Set;
 
 import dctl.formulas.Formula;
+import dctl.formulas.PropositionalFormula;
 import dctl.formulas.StateFormula;
+import dctl.formulas.True;
 
 
 public abstract class TableauxNode {
@@ -40,7 +42,6 @@ public abstract class TableauxNode {
 			return false;
 		return true;
 	}
-	
 	
 	
 }

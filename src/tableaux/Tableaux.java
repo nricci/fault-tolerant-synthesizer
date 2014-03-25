@@ -21,7 +21,8 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.Subgraph;
 
 import dctl.formulas.*;
-import fj.test.reflect.Main;
+import static util.SetUtils.minus;
+import static util.SetUtils.union;
 
 
 public class Tableaux {
@@ -312,25 +313,18 @@ public class Tableaux {
 	public int detect_elementary_faults() {
 		int count = 0;
 		
-		for(TableauxNode _n : graph.vertexSet()) {
-			if(_n instanceof AndNode) {
-				AndNode n = (AndNode) _n;
-				Set<Proposition> props = new HashSet<Proposition>();
-				Set<DeonticProposition> o_props = new HashSet<DeonticProposition>();
-				for(StateFormula f : n.formulas) {
-					if(f instanceof Proposition)
-						props.add((Proposition) f);
-					else if(f instanceof DeonticProposition)
-						o_props.add((DeonticProposition) f);
-				}
-				for(DeonticProposition d : o_props) {
-					Proposition p = new Proposition(d.name().substring(3));
-					if(!props.contains(p)) {
-						n.faulty = true;
-						count++;
-						break;
+		for(TableauxNode n : graph.vertexSet()) {
+			if(!n.faulty && n instanceof AndNode) {
+				AndNode _n = (AndNode) n;
+				for(StateFormula f : _n.formulas) {
+					if(f instanceof DeonticProposition) {
+						if(!_n.sat(((DeonticProposition) f).get_prop())) {
+							n.faulty = true;
+							count++;
+							break;	
+						}
 					}
-				}
+				}	
 			}
 		}
 		return count;
@@ -453,7 +447,90 @@ public class Tableaux {
 	 * ******************************************* 
 	*/
 	
+	/* Returns a map which domain represents the set of nodes where it is posible to
+	 * inject faults. And the image of a node is a set of deontic variables to violate
+	 * in order to generate a new fault.
+	*/
+	public Map<AndNode, Set<DeonticProposition>> fault_injection_point() {
+		Map<AndNode, Set<DeonticProposition>> result = new HashMap<AndNode, Set<DeonticProposition>>();
+		for(TableauxNode n : graph.vertexSet()) {
+			if(n instanceof AndNode && !n.faulty) {
+				// We check whether we have an AND-Node with obligations to violate.
+				Set<DeonticProposition> obligations = new HashSet<DeonticProposition>();
+				for(StateFormula f : n.formulas) {
+					if(f instanceof DeonticProposition)
+						if(((AndNode) n).sat(((DeonticProposition) f).get_prop()))
+							obligations.add((DeonticProposition) f);
+				}	
+				
+				if(!obligations.isEmpty())
+					result.put((AndNode) n, obligations);
+			}		
+		}
+		return result;
+	}
+	
+	/*public AndNode inject_fault(AndNode n, DeonticProposition obligation) {
+		assert n != null;
+		assert obligation != null;
+
+		if(!obligations.isEmpty()) {
+			OrNode fault = new OrNode(n.formulas);
+			fault.faulty = true;
+			graph.addVertex(fault);
+			graph.addEdge(n, fault);
+
+			for(DeonticProposition ob : obligations) {
+				AndNode _fault = new AndNode(union(minus(fault.formulas, ob.get_prop()),ob.get_prop().negate()));
+				_fault.faulty = true;
+				graph.addVertex(_fault);
+				graph.addEdge(fault, _fault);
+				frontier.add(_fault);	
+				count++;
+			}				
+		}
+	}*/	
+	
+	
 	public int inject_faults() {
+		int count = 0;
+		LinkedList<TableauxNode> workset = new LinkedList<TableauxNode>(graph.vertexSet());
+		while(!workset.isEmpty()) {
+			TableauxNode n = workset.pop();
+			if(n instanceof AndNode && !n.faulty) {
+				// If we have an AND-Node with obligations to violate.
+				
+				// We check what propositional variables (if any) must 
+				// be negated to violate some obligation.
+				Set<DeonticProposition> obligations = new HashSet<DeonticProposition>();
+				for(StateFormula f : n.formulas) {
+					if(f instanceof DeonticProposition) {
+						obligations.add((DeonticProposition) f);
+						assert ((AndNode) n).sat(f);
+					}
+				}	
+				if(!obligations.isEmpty()) {
+					OrNode fault = new OrNode(n.formulas);
+					fault.faulty = true;
+					graph.addVertex(fault);
+					graph.addEdge(n, fault);
+
+					for(DeonticProposition ob : obligations) {
+						AndNode _fault = new AndNode(union(minus(fault.formulas, ob.get_prop()),ob.get_prop().negate()));
+						_fault.faulty = true;
+						graph.addVertex(_fault);
+						graph.addEdge(fault, _fault);
+						frontier.add(_fault);	
+						count++;
+					}				
+				}
+			}		
+		}		
+		return count;
+	}
+	
+	
+	/*public int inject_faults_2() {
 		int count = 0;
 		LinkedList<TableauxNode> workset = new LinkedList<TableauxNode>(graph.vertexSet());
 		workset.removeAll(injected);
@@ -481,7 +558,7 @@ public class Tableaux {
 			}		
 		}		
 		return count;
-	}
+	}*/
 	
 
 	/* *******************************************
@@ -1106,6 +1183,44 @@ public class Tableaux {
 			res += "tag : " + tags.get(n) + "\n";
 			for(StateFormula f : n.formulas) {
 				res += f + "\n";
+			}
+			res += "\"];";
+		}
+		res += "\n";
+		for(DefaultEdge e : g.edgeSet()) {
+			res += map.get(g.getEdgeSource(e)) + "->" + map.get(g.getEdgeTarget(e)) + ";\n";
+		}
+		res += "}";
+		
+		if(file != null) {
+			try {
+				FileWriter w = new FileWriter(new File(file));
+				w.write(res);
+				w.close();
+			} catch (Exception e) {
+				System.out.println("Tableaux.to_dot: could not write to file.");
+				e.printStackTrace();
+			}
+		}
+		
+		return res;
+	}
+	
+	public static String to_dot_with_tags_only_elem(String file, DirectedGraph<TableauxNode, DefaultEdge> g, Map<TableauxNode,String> tags) {
+		String res = "";
+		
+		res += "digraph {\n";
+		int i = 0;
+		HashMap<TableauxNode,String> map = new HashMap<TableauxNode, String>();
+		for(TableauxNode n : g.vertexSet()) {
+			map.put(n, "n"+i);
+			res += "n" + i++ + " [shape=" + ((n instanceof AndNode)?"box":"hexagon");
+			res += (n.faulty?",style=dotted":"");
+			res += ",label=\"";
+			res += "tag : " + tags.get(n) + "\n";
+			for(StateFormula f : n.formulas) {
+				if(f.is_elementary() && !(f instanceof Quantifier))
+					res += f + "\n";
 			}
 			res += "\"];";
 		}

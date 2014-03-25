@@ -39,8 +39,7 @@ public class Main {
 			
 			int changes = 0;
 			do {
-				changes = t.expand();
-				System.out.println("expand: " + changes + " changes introduced.");
+				System.out.println("expand: " + t.expand() + " changes introduced.");
 				//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
 			} while (t.frontier());
 			
@@ -55,12 +54,10 @@ public class Main {
 			//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
 			System.out.println("delete: " + t.delete_unreachable() + " unreachable nodes removed.");
 			System.out.println("deontic: " + t.detect_elementary_faults() + " faults detected.");
-			//System.out.println("deontic: " + t.inject_faults() + " faults injected.");
+			System.out.println("deontic: " + t.inject_faults() + " faults injected.");
 			
-			//do {
-			//	System.out.println("expand: " + t.expand() + " changes introduced.");
-			//	System.out.println("deontic: " + t.inject_faults() + " faults injected.");
-			//} while (t.frontier());			
+			while (t.frontier()) System.out.println("expand: " + t.expand() + " changes introduced.");
+						
 			
 			
 			Graph g = t.get_graph();
@@ -70,8 +67,10 @@ public class Main {
 				tags.put(n, n.toString());	
 			}
 			Tableaux.to_dot_with_tags("output/final_tableaux.dot", t.get_graph(),tags);
-			System.out.println(stage);
-			System.out.println(t.get_graph().vertexSet().size());
+			Tableaux.to_dot_with_tags_only_elem("output/final_tableaux_elem.dot", t.get_graph(),tags);
+			
+			System.out.println("tableaux stage " + stage);
+			System.out.println("tableaux stage " + t.get_graph().vertexSet().size());
 			
 			
 //			int i = 0;
