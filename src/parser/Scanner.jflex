@@ -17,6 +17,8 @@ import java_cup.runtime.SymbolFactory;
 %eofval}
 
 %%
+"interface" { return sf.newSymbol("Interface",sym.INTERFACE, new String(yytext())); }
+"specification" { return sf.newSymbol("Specification",sym.SPECIFICATION, new String(yytext())); }
 ";" { return sf.newSymbol("Semicolon",sym.SEMI, new String(yytext())); }
 "A" { return sf.newSymbol("For All",sym.FORALL, new String(yytext())); }
 "E" { return sf.newSymbol("Exist",sym.EXISTS, new String(yytext())); }

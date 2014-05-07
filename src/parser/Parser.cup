@@ -2,20 +2,21 @@ package parser;
 
 import java_cup.runtime.*;
 import dctl.formulas.*;
+import util.Pair;
 import java.util.Set;
 import java.util.HashSet;
 
 
 parser code {:
 
-	Set<StateFormula> _spec;
+	Pair<Set<Proposition>, Set<StateFormula>> _spec;
 
-	public static Set<StateFormula> parse_specification(String file) throws Exception{
+	public static Pair<Set<Proposition>, Set<StateFormula>> parse_specification(String file) throws Exception{
 		if (file == null) 
 			throw new Exception("The path to the file containing the specification must be supplied.");
 		SymbolFactory sf = new DefaultSymbolFactory();
 		Parser p = new Parser(new Scanner(new java.io.FileInputStream(file),sf),sf);
-		p._spec = new HashSet<StateFormula>();
+		p._spec = new Pair(new HashSet<Proposition>(), new HashSet<StateFormula>());
 		p.parse();		
 		return p._spec;
 	}
@@ -27,13 +28,14 @@ parser code {:
 	}
 :}
 
+terminal String INTERFACE, SPECIFICATION;
 terminal String LPAREN, RPAREN, SEMI;
 terminal String TRUE, FALSE, ID;
 terminal String NEG, AND, OR, IMPLIES;
 terminal String EXISTS, FORALL, PERMISSION, OBLIGATION;
 terminal String NEXT, UNTIL, FUTURE, GLOBALLY;
 
-non terminal specification;
+non terminal global_spec, ft_interface, specification;
 non terminal StateFormula formula, state_form;
 non terminal PathFormula path_form;
 
@@ -45,11 +47,20 @@ precedence left FUTURE, GLOBALLY;
 precedence right NEXT;
 precedence right NEG;
 
-specification ::= 	formula:f specification	{: parser._spec.add(f); :}
-				|	formula:f				{: parser._spec.add(f); :}
+
+global_spec ::= 	INTERFACE ft_interface SPECIFICATION specification
+			;
+			
+ft_interface	::=		ID:i SEMI ft_interface			{: parser._spec.first.add(new Proposition(i)); :}	
+				|		ID:i SEMI						{: parser._spec.first.add(new Proposition(i)); :}
+				;	
+
+specification ::= 	formula:f specification		{: parser._spec.second.add(f); :}
+				|	formula:f					{: parser._spec.second.add(f); :}
 			;
 
 formula ::= state_form:s SEMI {: RESULT = s; :}
+			|	error:e SEMI	{: System.out.println(e); :}
            ; 
 
 state_form 	::=	TRUE									{: RESULT = new True();	:}
@@ -60,15 +71,15 @@ state_form 	::=	TRUE									{: RESULT = new True();	:}
 	    	| 	state_form:p OR state_form:q 			{: RESULT = new Or(p,q);	:}
 	    	| 	state_form:p IMPLIES state_form:q 		{: RESULT = new Or(new Negation(p), q); :}
 	    	|	LPAREN state_form:p RPAREN				{: RESULT = p; :}
-            | 	EXISTS LPAREN path_form:p RPAREN 		{: RESULT = new Exists(p); :}
-            | 	FORALL LPAREN path_form:p RPAREN 		{: RESULT = new Forall(p); :}
-            | 	OBLIGATION LPAREN path_form:p RPAREN 	{: RESULT = new Obligation(p); :}
-            | 	PERMISSION LPAREN path_form:p RPAREN	{: RESULT = new Permission(p); :}
+            | 	EXISTS path_form:p				 		{: RESULT = new Exists(p); :}
+            | 	FORALL path_form:p 						{: RESULT = new Forall(p); :}
+            | 	OBLIGATION path_form:p					{: RESULT = new Obligation(p); :}
+            | 	PERMISSION path_form:p					{: RESULT = new Permission(p); :}
 	    ;
 
-path_form ::=	NEXT state_form:p 						{: RESULT = new Next(p); 	:}
-			|	FUTURE state_form:p 			 		{: RESULT = new Until(new True(), p); 	:}
-			|	GLOBALLY state_form:p			 		{: RESULT = new WeakUntil(p, new False()); :}
-			|	state_form:p UNTIL:u state_form:q 		{: RESULT = new Until(p, q); :}
+path_form ::=	NEXT  state_form:p  					{: RESULT = new Next(p); 	:}
+			|	FUTURE  state_form:p  			 		{: RESULT = new Until(new True(), p); 	:}
+			|	GLOBALLY  state_form:p 			 		{: RESULT = new WeakUntil(p, new False()); :}
+			|	LPAREN state_form:p UNTIL:u state_form:q RPAREN  		{: RESULT = new Until(p, q); :}
 		;
           

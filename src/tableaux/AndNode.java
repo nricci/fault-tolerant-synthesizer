@@ -21,6 +21,7 @@ public class AndNode extends TableauxNode {
 	public AndNode(Set<StateFormula> s) {
 		faulty = false;
 		this.formulas = s;
+		formulas.add(new True());
 	}
 	
 	public Set<OrNode> tiles() {

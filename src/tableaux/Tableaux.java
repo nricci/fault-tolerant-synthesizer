@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -20,6 +21,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.Subgraph;
 
+import util.Pair;
 import dctl.formulas.*;
 import static util.SetUtils.minus;
 import static util.SetUtils.union;
@@ -33,19 +35,25 @@ public class Tableaux {
 	
 	private Set<TableauxNode> injected;	
 	
+	private Set<Proposition> _interface;	
+	
 	private Set<TableauxNode> to_check;
 	
 	private Set<TableauxNode> to_delete;	
 	
-	private DirectedGraph<TableauxNode, DefaultEdge> graph; 
+	private DirectedGraph<TableauxNode, DefaultEdge> graph;
 	
-	public Tableaux(Set<StateFormula> spec) {
+	private Set<Pair<AndNode,DeonticProposition>> injected_faults;
+	
+	public Tableaux(Set<Proposition> _interface, Set<StateFormula> _spec) {
 		graph = new DefaultDirectedGraph(DefaultEdge.class);
 		frontier = new LinkedList<TableauxNode>();
 		to_check = new HashSet<TableauxNode>();
 		to_delete = new HashSet<TableauxNode>();
 		injected = new HashSet<TableauxNode>();
-		root = new OrNode(spec);
+		injected_faults = new HashSet<Pair<AndNode,DeonticProposition>>();
+		this._interface = _interface;
+		root = new OrNode(_spec);
 		graph.addVertex(root);		
 		frontier.add(root);
 		
@@ -56,46 +64,59 @@ public class Tableaux {
 	}
 	
 	public boolean frontier() {
-		return !this.frontier.isEmpty();
+		return !frontier.isEmpty();
 	}
 	
-	public int expand() {
-		int count = 0;
+	public List<TableauxNode> expand() {
 		if (!frontier.isEmpty()) {
 			TableauxNode n = frontier.poll();
-			if (n instanceof OrNode) {
-				OrNode _n = (OrNode) n;
-				Set<AndNode> succ = _n.blocks();
-				for(AndNode _m : succ) {
+			return expand(n);
+		}
+		return null;
+	}
+	
+	public List<TableauxNode> expand(TableauxNode n) {
+		List<TableauxNode> res = new LinkedList<TableauxNode>();
+
+		assert n != null;
+		assert succesors(n, graph).isEmpty();
+		
+		if (n instanceof OrNode) {
+			OrNode _n = (OrNode) n;
+			Set<AndNode> succ = _n.blocks();
+			for(AndNode _m : succ) {
+				if(!graph.containsVertex(_m)) {
+					graph.addVertex(_m);
+					frontier.add(_m);
+				}
+				graph.addEdge(_n, _m);
+				res.add(_m);
+			}
+			frontier.remove(_n);
+		} 
+		else if (n instanceof AndNode) {
+			AndNode _n = (AndNode) n;
+			Set<OrNode> succ = _n.tiles();
+			if (succ.isEmpty()) {
+				OrNode _dummy = new OrNode(_n.formulas);
+				graph.addVertex(_dummy);
+				graph.addEdge(_n, _dummy);
+				graph.addEdge(_dummy,_n);
+				res.add(_dummy);
+			} else {
+				for(OrNode _m : succ) {
 					if(!graph.containsVertex(_m)) {
 						graph.addVertex(_m);
 						frontier.add(_m);
 					}
-					count += graph.addEdge(_n, _m) != null?1:0;
+					graph.addEdge(_n, _m);
+					res.add(_m);
 				}
-				frontier.remove(_n);
-			} 
-			else if (n instanceof AndNode) {
-				AndNode _n = (AndNode) n;
-				Set<OrNode> succ = _n.tiles();
-				if (succ.isEmpty()) {
-					OrNode _dummy = new OrNode(_n.formulas);
-					graph.addVertex(_dummy);
-					count += graph.addEdge(_n, _dummy) != null?1:0;
-					count += graph.addEdge(_dummy,_n) != null?1:0;
-				} else {
-					for(OrNode _m : succ) {
-						if(!graph.containsVertex(_m)) {
-							graph.addVertex(_m);
-							frontier.add(_m);
-						}
-						count += graph.addEdge(_n, _m) != null?1:0;
-					}
-					frontier.remove(_n);			
-				}
+				frontier.remove(_n);			
 			}
 		}
-		return count;
+		
+		return res;
 	}
 	
 	
@@ -286,7 +307,8 @@ public class Tableaux {
 
 	/*	Returns true iff the node is not immediately inconsistent 
 	*/
-	public boolean is_consistent(Set<StateFormula> s) {
+	// ========= This is used from OrNode. It Should be Moved to a common area. ===============
+	public static boolean is_consistent(Set<StateFormula> s) {
 		for(StateFormula f : s) {
 			if(f instanceof False)
 				return false;
@@ -313,13 +335,15 @@ public class Tableaux {
 	public int detect_elementary_faults() {
 		int count = 0;
 		
-		for(TableauxNode n : graph.vertexSet()) {
+		List<TableauxNode> l = new LinkedList<TableauxNode>(graph.vertexSet());
+		for(TableauxNode n : l) {
+			assert graph.containsVertex(n);
 			if(!n.faulty && n instanceof AndNode) {
 				AndNode _n = (AndNode) n;
 				for(StateFormula f : _n.formulas) {
 					if(f instanceof DeonticProposition) {
 						if(!_n.sat(((DeonticProposition) f).get_prop())) {
-							n.faulty = true;
+							toogle_faulty(n);
 							count++;
 							break;	
 						}
@@ -329,6 +353,20 @@ public class Tableaux {
 		}
 		return count;
 	}
+	
+	private void toogle_faulty(TableauxNode n) {
+		TableauxNode new_node = null;
+		if(n instanceof OrNode) new_node = new OrNode(n.formulas);
+		if(n instanceof AndNode) new_node = new AndNode(n.formulas);
+		assert new_node != null;
+		new_node.faulty = !n.faulty;
+		graph.addVertex(new_node);
+		for(TableauxNode pre : predecesors(n, graph)) graph.addEdge(pre, new_node);
+		for(TableauxNode post : succesors(n, graph)) graph.addEdge(new_node, post);
+		graph.removeVertex(n);	
+	}
+	
+	
 	
 	/* VER ESTO COMO HACERLO BIEN PORQUE ES UN PERNO
 	 * 
@@ -470,31 +508,56 @@ public class Tableaux {
 		return result;
 	}
 	
+	public Set<AndNode> falible_nodes() {
+		Set<AndNode> result = new HashSet<AndNode>();
+		for(TableauxNode n : graph.vertexSet()) {
+			if(n instanceof AndNode && !n.faulty) {
+				// We check whether we have an AND-Node with obligations to violate.
+				Set<DeonticProposition> obligations = new HashSet<DeonticProposition>();
+				for(StateFormula f : n.formulas) {
+					if(f instanceof DeonticProposition)
+						if(((AndNode) n).sat(((DeonticProposition) f).get_prop()))
+							obligations.add((DeonticProposition) f);
+				}	
+				
+				if(!obligations.isEmpty())
+					result.add((AndNode) n);
+			}		
+		}
+		return result;
+	}
+	
+	public DeonticProposition pick_fault(AndNode n) {
+		for(StateFormula f : n.formulas) {
+			if(f instanceof DeonticProposition)
+				if(!injected_faults.contains(new Pair(n,f)))
+					return (DeonticProposition) f;
+		}
+		return null;
+	}	
+	
 	/*public AndNode inject_fault(AndNode n, DeonticProposition obligation) {
 		assert n != null;
-		assert obligation != null;
+		if(obligation == null) return null;
 
-		if(!obligations.isEmpty()) {
 			OrNode fault = new OrNode(n.formulas);
 			fault.faulty = true;
 			graph.addVertex(fault);
 			graph.addEdge(n, fault);
 
-			for(DeonticProposition ob : obligations) {
-				AndNode _fault = new AndNode(union(minus(fault.formulas, ob.get_prop()),ob.get_prop().negate()));
-				_fault.faulty = true;
-				graph.addVertex(_fault);
-				graph.addEdge(fault, _fault);
-				frontier.add(_fault);	
-				count++;
-			}				
-		}
-	}*/	
+			AndNode _fault = new AndNode(union(minus(fault.formulas, ob.get_prop()),ob.get_prop().negate()));
+			_fault.faulty = true;
+			graph.addVertex(_fault);
+			graph.addEdge(fault, _fault);
+			frontier.add(_fault);	
+			count++;				
+		
+	}*/
 	
 	
-	public int inject_faults() {
-		int count = 0;
+	public Set<AndNode> inject_faults() {
 		LinkedList<TableauxNode> workset = new LinkedList<TableauxNode>(graph.vertexSet());
+		Set<AndNode> res = new HashSet<AndNode>();
 		while(!workset.isEmpty()) {
 			TableauxNode n = workset.pop();
 			if(n instanceof AndNode && !n.faulty) {
@@ -516,49 +579,63 @@ public class Tableaux {
 					graph.addEdge(n, fault);
 
 					for(DeonticProposition ob : obligations) {
-						AndNode _fault = new AndNode(union(minus(fault.formulas, ob.get_prop()),ob.get_prop().negate()));
-						_fault.faulty = true;
-						graph.addVertex(_fault);
-						graph.addEdge(fault, _fault);
-						frontier.add(_fault);	
-						count++;
+						if(!injected_faults.contains(new Pair<AndNode,DeonticProposition>((AndNode) n,ob))) {
+							AndNode _fault = new AndNode(union(minus(fault.formulas, ob.get_prop()),ob.get_prop().negate()));
+							_fault.faulty = true;
+							graph.addVertex(_fault);
+							graph.addEdge(fault, _fault);
+							frontier.add(_fault);	
+							res.add(_fault);
+							injected_faults.add(new Pair<AndNode,DeonticProposition>((AndNode) n,ob));
+						}
 					}				
 				}
 			}		
 		}		
-		return count;
+		return res;
+	}
+	
+
+	/* *******************************************
+	 * 				THIS IS IT!!!
+	 * ******************************************* 
+	*/
+	
+	public void generate_non_masking_faults() {
+		LinkedList<AndNode> faults = new LinkedList<AndNode>();
+		
+		//do{
+		
+		faults.addAll(inject_faults());
+		do {
+			AndNode fault = faults.poll();
+			
+			
+			
+		} while(!faults.isEmpty());
+		
+		
+		
+		//} while(super strange criteria for final stop)
+		
+		
+		
+		
 	}
 	
 	
-	/*public int inject_faults_2() {
-		int count = 0;
-		LinkedList<TableauxNode> workset = new LinkedList<TableauxNode>(graph.vertexSet());
-		workset.removeAll(injected);
-		while(!workset.isEmpty()) {
-			TableauxNode n = workset.pop();
-			if(n instanceof AndNode) {
-				Set<Proposition> props = new HashSet<Proposition>();
-				for(StateFormula f : n.formulas) {
-					if(f instanceof Proposition && n.formulas.contains(new DeonticProposition(((Proposition) f).name())))
-						props.add((Proposition) f);
-				}	
-				
-				for(Proposition p : props) {
-					Set<StateFormula> s = new HashSet<StateFormula>(n.formulas);
-					s.remove(p);
-					s.add(new Negation(p));
-					OrNode fault = new OrNode(s);
-					fault.faulty = true;
-					graph.addVertex(fault);
-					graph.addEdge(n, fault);
-					frontier.add(fault);
-					count++;
-				}
-				injected.add(n);
-			}		
-		}		
-		return count;
-	}*/
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 
 	/* *******************************************

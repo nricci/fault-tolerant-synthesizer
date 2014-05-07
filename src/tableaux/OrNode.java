@@ -5,15 +5,18 @@ import java.util.Set;
 
 import dctl.formulas.Formula;
 import dctl.formulas.StateFormula;
+import dctl.formulas.True;
 import util.*;
 import static util.SetUtils.*;
 import util.binarytree.BinaryTree;
+import static tableaux.Tableaux.is_consistent;
 
 public class OrNode extends TableauxNode {
 
 	public OrNode(Set<StateFormula> s) {
 		faulty = false;
 		this.formulas = s;
+		formulas.add(new True());
 		is_non_elementary = new Predicate<StateFormula>() {
 			public boolean eval(StateFormula _arg) {return !_arg.is_elementary();}
 		};
@@ -109,6 +112,8 @@ public class OrNode extends TableauxNode {
 	
 	
 	public Set<Set<StateFormula>> closure_impl_2(BinaryTree<Set<StateFormula>> t) {
+		if(!is_consistent(t.val())) return new HashSet<Set<StateFormula>>();
+		
 		StateFormula f = pick(t.val(),is_non_elementary);
 		if (f == null) {
 			Set<Set<StateFormula>> r = new HashSet<Set<StateFormula>>();

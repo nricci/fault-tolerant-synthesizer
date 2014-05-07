@@ -19,6 +19,7 @@ import tableaux.AndNode;
 import tableaux.OrNode;
 import tableaux.Tableaux;
 import tableaux.TableauxNode;
+import util.Pair;
 import util.binarytree.BinaryTree;
 import dctl.formulas.*;
 
@@ -29,17 +30,18 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		try {
-			Set<StateFormula> s = Parser.parse_specification(args[0]);
+			Pair<Set<Proposition>,Set<StateFormula>> s = Parser.parse_specification(args[0]);
 			long start_time = System.currentTimeMillis();
 			
-			Tableaux t = new Tableaux(s);
+			System.out.println("fault-tolerant interface: " + s.first);
+			Tableaux t = new Tableaux(s.first,s.second);
 			
 			int stage = 0;
 			//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
 			
 			int changes = 0;
 			do {
-				System.out.println("expand: " + t.expand() + " changes introduced.");
+				System.out.println("expand: " + t.expand().size() + " changes introduced.");
 				//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
 			} while (t.frontier());
 			
@@ -54,9 +56,14 @@ public class Main {
 			//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
 			System.out.println("delete: " + t.delete_unreachable() + " unreachable nodes removed.");
 			System.out.println("deontic: " + t.detect_elementary_faults() + " faults detected.");
-			System.out.println("deontic: " + t.inject_faults() + " faults injected.");
 			
-			while (t.frontier()) System.out.println("expand: " + t.expand() + " changes introduced.");
+			t.generate_non_masking_faults();
+			
+			
+			
+			System.out.println("deontic: " + t.inject_faults().size() + " faults injected.");
+			
+			while (t.frontier()) System.out.println("expand: " + t.expand().size() + " changes introduced.");
 						
 			
 			
@@ -69,8 +76,8 @@ public class Main {
 			Tableaux.to_dot_with_tags("output/final_tableaux.dot", t.get_graph(),tags);
 			Tableaux.to_dot_with_tags_only_elem("output/final_tableaux_elem.dot", t.get_graph(),tags);
 			
-			System.out.println("tableaux stage " + stage);
-			System.out.println("tableaux stage " + t.get_graph().vertexSet().size());
+			//System.out.println("tableaux stage " + stage);
+			System.out.println("tableaux size " + t.get_graph().vertexSet().size());
 			
 			
 //			int i = 0;
