@@ -91,6 +91,11 @@ public final class Negation extends PropositionalFormula implements UnaryExpr {
 		else
 			return new Negation((StateFormula)_arg.obligation_formula());
 	}
+
+	@Override
+	public boolean is_propositional() {
+		return _arg.is_propositional();
+	}
 	
 	
 }

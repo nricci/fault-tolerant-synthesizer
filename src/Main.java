@@ -17,6 +17,7 @@ import org.jgrapht.graph.DefaultEdge;
 import parser.Parser;
 import tableaux.AndNode;
 import tableaux.OrNode;
+import tableaux.Specification;
 import tableaux.Tableaux;
 import tableaux.TableauxNode;
 import util.Pair;
@@ -30,11 +31,13 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		try {
-			Pair<Set<Proposition>,Set<StateFormula>> s = Parser.parse_specification(args[0]);
+			Specification s = Parser.parse_specification(args[0]);
 			long start_time = System.currentTimeMillis();
 			
-			System.out.println("fault-tolerant interface: " + s.first);
-			Tableaux t = new Tableaux(s.first,s.second);
+			System.out.println("specification:\n\n" + s.toString());
+			if(2+2 == 4) return;
+			
+			Tableaux t = new Tableaux(null,null);
 			
 			int stage = 0;
 			//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());

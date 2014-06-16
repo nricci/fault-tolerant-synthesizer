@@ -39,5 +39,10 @@ public final class Obligation extends Quantifier {
 	public Formula obligation_formula() {
 		return new Obligation((PathFormula) _arg.obligation_formula());
 	}
+
+	@Override
+	public boolean is_propositional() {
+		return false;
+	}
 	
 }

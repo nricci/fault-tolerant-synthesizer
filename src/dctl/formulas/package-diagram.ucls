@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<class-diagram version="1.1.4" icons="true" always-add-relationships="false" generalizations="true" realizations="true" 
+  associations="true" dependencies="false" nesting-relationships="true">  
+  <class id="1" language="java" name="dctl.formulas.Until" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/Until.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="250" y="665"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="2" language="java" name="dctl.formulas.And" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/And.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="422" y="1119"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="3" language="java" name="dctl.formulas.Exists" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/Exists.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1870" y="1008"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="4" language="java" name="dctl.formulas.Or" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/Or.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="698" y="1116"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="5" language="java" name="dctl.formulas.True" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/True.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1261" y="1060"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="6" language="java" name="dctl.formulas.Formula" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/Formula.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="674" y="95"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="7" language="java" name="dctl.formulas.Atom" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/Atom.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1344" y="625"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="8" language="java" name="dctl.formulas.False" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/False.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1426" y="1048"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="9" language="java" name="dctl.formulas.Quantifier" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/Quantifier.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1768" y="595"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="10" language="java" name="dctl.formulas.StateFormula" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/StateFormula.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1203" y="274"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="11" language="java" name="dctl.formulas.PathFormula" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/PathFormula.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="273" y="353"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="12" language="java" name="dctl.formulas.Proposition" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/Proposition.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1601" y="1066"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="13" language="java" name="dctl.formulas.PropositionalFormula" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/PropositionalFormula.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="807" y="615"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <interface id="14" language="java" name="dctl.formulas.BinaryExpr" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/BinaryExpr.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1295" y="1394"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </interface>  
+  <class id="15" language="java" name="dctl.formulas.Permission" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/Permission.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="2136" y="1014"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="16" language="java" name="dctl.formulas.WeakUntil" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/WeakUntil.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="491" y="662"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="17" language="java" name="dctl.formulas.Negation" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/Negation.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="958" y="1116"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <interface id="18" language="java" name="dctl.formulas.UnaryExpr" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/UnaryExpr.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="861" y="1382"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </interface>  
+  <class id="19" language="java" name="dctl.formulas.Forall" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/Forall.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1805" y="842"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="20" language="java" name="dctl.formulas.Next" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/Next.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="26" y="656"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="21" language="java" name="dctl.formulas.Obligation" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/Obligation.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="2109" y="849"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="22" language="java" name="dctl.formulas.DeonticProposition" project="fault-tolerant-synthesizer" 
+    file="/fault-tolerant-synthesizer/src/dctl/formulas/DeonticProposition.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1418" y="1229"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <association id="23">    
+    <end type="SOURCE" refId="16" navigable="false">      
+      <attribute id="24" name="_right"/>      
+      <multiplicity id="25" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="10" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="26">    
+    <end type="SOURCE" refId="1" navigable="false">      
+      <attribute id="27" name="_left"/>      
+      <multiplicity id="28" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="10" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="29">    
+    <end type="SOURCE" refId="12"/>    
+    <end type="TARGET" refId="7"/>  
+  </generalization>  
+  <realization id="30">    
+    <end type="SOURCE" refId="9"/>    
+    <end type="TARGET" refId="18"/>  
+  </realization>  
+  <realization id="31">    
+    <end type="SOURCE" refId="16"/>    
+    <end type="TARGET" refId="14"/>  
+  </realization>  
+  <association id="32">    
+    <end type="SOURCE" refId="4" navigable="false">      
+      <attribute id="33" name="_left"/>      
+      <multiplicity id="34" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="10" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="35">    
+    <end type="SOURCE" refId="15"/>    
+    <end type="TARGET" refId="9"/>  
+  </generalization>  
+  <association id="36">    
+    <end type="SOURCE" refId="17" navigable="false">      
+      <attribute id="37" name="_arg"/>      
+      <multiplicity id="38" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="10" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="39">    
+    <end type="SOURCE" refId="21"/>    
+    <end type="TARGET" refId="9"/>  
+  </generalization>  
+  <generalization id="40">    
+    <end type="SOURCE" refId="17"/>    
+    <end type="TARGET" refId="13"/>  
+  </generalization>  
+  <association id="41">    
+    <end type="SOURCE" refId="16" navigable="false">      
+      <attribute id="42" name="_left"/>      
+      <multiplicity id="43" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="10" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="44">    
+    <end type="SOURCE" refId="2" navigable="false">      
+      <attribute id="45" name="_left"/>      
+      <multiplicity id="46" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="10" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="47">    
+    <end type="SOURCE" refId="7"/>    
+    <end type="TARGET" refId="10"/>  
+  </generalization>  
+  <generalization id="48">    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="7"/>  
+  </generalization>  
+  <association id="49">    
+    <end type="SOURCE" refId="20" navigable="false">      
+      <attribute id="50" name="_arg"/>      
+      <multiplicity id="51" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="10" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <realization id="52">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="14"/>  
+  </realization>  
+  <association id="53">    
+    <end type="SOURCE" refId="4" navigable="false">      
+      <attribute id="54" name="_right"/>      
+      <multiplicity id="55" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="10" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="56">    
+    <end type="SOURCE" refId="16"/>    
+    <end type="TARGET" refId="11"/>  
+  </generalization>  
+  <generalization id="57">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="9"/>  
+  </generalization>  
+  <generalization id="58">    
+    <end type="SOURCE" refId="22"/>    
+    <end type="TARGET" refId="7"/>  
+  </generalization>  
+  <generalization id="59">    
+    <end type="SOURCE" refId="19"/>    
+    <end type="TARGET" refId="9"/>  
+  </generalization>  
+  <association id="60">    
+    <end type="SOURCE" refId="1" navigable="false">      
+      <attribute id="61" name="_right"/>      
+      <multiplicity id="62" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="10" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="63">    
+    <end type="SOURCE" refId="8"/>    
+    <end type="TARGET" refId="7"/>  
+  </generalization>  
+  <realization id="64">    
+    <bendpoint x="647" y="1011"/>    
+    <bendpoint x="647" y="1203"/>    
+    <end type="SOURCE" refId="20"/>    
+    <end type="TARGET" refId="18"/>  
+  </realization>  
+  <realization id="65">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="14"/>  
+  </realization>  
+  <generalization id="66">    
+    <end type="SOURCE" refId="13"/>    
+    <end type="TARGET" refId="10"/>  
+  </generalization>  
+  <realization id="67">    
+    <end type="SOURCE" refId="17"/>    
+    <end type="TARGET" refId="18"/>  
+  </realization>  
+  <generalization id="68">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="13"/>  
+  </generalization>  
+  <generalization id="69">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="13"/>  
+  </generalization>  
+  <generalization id="70">    
+    <end type="SOURCE" refId="11"/>    
+    <end type="TARGET" refId="6"/>  
+  </generalization>  
+  <generalization id="71">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="11"/>  
+  </generalization>  
+  <association id="72">    
+    <end type="SOURCE" refId="9" navigable="false">      
+      <attribute id="73" name="_arg"/>      
+      <multiplicity id="74" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="11" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="75">    
+    <end type="SOURCE" refId="2" navigable="false">      
+      <attribute id="76" name="_right"/>      
+      <multiplicity id="77" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="10" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="78">    
+    <end type="SOURCE" refId="9"/>    
+    <end type="TARGET" refId="10"/>  
+  </generalization>  
+  <generalization id="79">    
+    <end type="SOURCE" refId="20"/>    
+    <end type="TARGET" refId="11"/>  
+  </generalization>  
+  <realization id="80">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="14"/>  
+  </realization>  
+  <generalization id="81">    
+    <end type="SOURCE" refId="10"/>    
+    <end type="TARGET" refId="6"/>  
+  </generalization>  
+  <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+    accessors="true" visibility="true">    
+    <attributes public="true" package="true" protected="true" private="true" static="true"/>    
+    <operations public="true" package="true" protected="true" private="true" static="true"/>  
+  </classifier-display>  
+  <association-display labels="true" multiplicity="true"/>
+</class-diagram>

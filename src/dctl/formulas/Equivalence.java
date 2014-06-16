@@ -1,15 +1,14 @@
 package dctl.formulas;
 
-import java.util.HashSet;
 import java.util.Set;
 
-public final class Or extends PropositionalFormula implements BinaryExpr {
+public class Equivalence extends PropositionalFormula implements BinaryExpr {
 
-	private StateFormula _left;
+private StateFormula _left;
 	
 	private StateFormula _right; 
 	
-	public Or(StateFormula l, StateFormula r) {
+	public Equivalence(StateFormula l, StateFormula r) {
 		_left = l;
 		_right = r;
 	}
@@ -42,14 +41,15 @@ public final class Or extends PropositionalFormula implements BinaryExpr {
 
 	@Override
 	public Set<StateFormula> get_decomposition() {
-		Set<StateFormula> deco = new HashSet<StateFormula>();
-		deco.add(_left);
-		deco.add(_right);
-		return deco;
+		throw new Error("Not Supported Yet. Class Only for parsing.");
+		//Set<StateFormula> deco = new HashSet<StateFormula>();
+		//deco.add(_left);
+		//deco.add(_right);
+		//return deco;
 	}
 
 	public String toString() {
-		return arg_left().toString() + "||" + arg_right().toString();
+		return arg_left().toString() + "<->" + arg_right().toString();
 	}
 
 
@@ -71,7 +71,7 @@ public final class Or extends PropositionalFormula implements BinaryExpr {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Or other = (Or) obj;
+		Equivalence other = (Equivalence) obj;
 		if (_left == null) {
 			if (other._left != null)
 				return false;
@@ -85,9 +85,11 @@ public final class Or extends PropositionalFormula implements BinaryExpr {
 		return true;
 	}
 
+
 	@Override
 	public Formula obligation_formula() {
-		return new Or((StateFormula)_left.obligation_formula(),(StateFormula)_right.obligation_formula());
+		throw new Error("Not Supported Yet. Class Only for parsing.");
+		//return new Implication((StateFormula)_left.obligation_formula(),(StateFormula)_right.obligation_formula());
 	}
 
 
@@ -95,6 +97,5 @@ public final class Or extends PropositionalFormula implements BinaryExpr {
 	public boolean is_propositional() {
 		return _left.is_propositional() && _right.is_propositional();
 	}
-	
 
 }

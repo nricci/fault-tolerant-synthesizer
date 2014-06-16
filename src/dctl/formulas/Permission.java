@@ -40,4 +40,9 @@ public final class Permission extends Quantifier {
 		return new Permission((PathFormula) _arg.obligation_formula());
 	}
 
+	@Override
+	public boolean is_propositional() {
+		return false;
+	}
+
 }

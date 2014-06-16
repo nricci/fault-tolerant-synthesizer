@@ -76,5 +76,10 @@ public final class WeakUntil extends PathFormula implements BinaryExpr {
 		return new WeakUntil((StateFormula) _left.obligation_formula(),(StateFormula) _right.obligation_formula());
 	}
 
+	@Override
+	public boolean is_propositional() {
+		return false;
+	}
+
 
 }

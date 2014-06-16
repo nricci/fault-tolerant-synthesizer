@@ -22,5 +22,10 @@ public final class True extends Atom {
 	public Formula obligation_formula() {
 		return new True();
 	}
+
+	@Override
+	public boolean is_propositional() {
+		return true;
+	}
 	
 }

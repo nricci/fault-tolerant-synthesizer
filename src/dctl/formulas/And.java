@@ -90,6 +90,12 @@ public final class And extends PropositionalFormula implements BinaryExpr {
 	public Formula obligation_formula() {
 		return new And((StateFormula)_left.obligation_formula(),(StateFormula)_right.obligation_formula());
 	}
+
+
+	@Override
+	public boolean is_propositional() {
+		return _left.is_propositional() && _right.is_propositional();
+	}
 	
 	
 

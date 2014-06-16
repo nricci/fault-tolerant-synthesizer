@@ -40,5 +40,10 @@ public final class Forall extends Quantifier {
 		return new Forall((PathFormula) _arg.obligation_formula());
 	}
 
+	@Override
+	public boolean is_propositional() {
+		return false;
+	}
+
 	
 }

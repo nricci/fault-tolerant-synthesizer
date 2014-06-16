@@ -39,5 +39,10 @@ public final class Exists extends Quantifier {
 	public Formula obligation_formula() {
 		return new Exists((PathFormula) _arg.obligation_formula());
 	}
+
+	@Override
+	public boolean is_propositional() {
+		return false;
+	}
 	
 }

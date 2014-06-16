@@ -1,35 +1,43 @@
 package dctl.formulas;
 
-public final class Next extends PathFormula implements UnaryExpr {
+public class Globally extends PathFormula implements UnaryExpr {
 
 	private StateFormula _arg;
-	
-	public Next(StateFormula arg) {
-		_arg = arg;
+		
+	public Globally(StateFormula a) {
+		_arg = a;
 	}
 	
 	@Override
-	public StateFormula arg() {
+	public Formula arg() {
 		return _arg;
 	}
 
 	@Override
 	public boolean is_alpha() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean is_beta() {
 		return false;
 	}
-	
+
 	public String toString() {
-		return "X(" + arg().toString() + ")";
+		return "G" + _arg.toString();
 	}
 
 	@Override
 	public boolean is_elementary() {
-		return true;
+		return false;
+	}
+
+
+
+	@Override
+	public Formula obligation_formula() {
+		throw new Error("Not Supported Yet. Class Only for parsing.");
+		//return new Until((StateFormula) _left.obligation_formula(),(StateFormula) _right.obligation_formula());
 	}
 
 	@Override
@@ -48,7 +56,7 @@ public final class Next extends PathFormula implements UnaryExpr {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Next other = (Next) obj;
+		Globally other = (Globally) obj;
 		if (_arg == null) {
 			if (other._arg != null)
 				return false;
@@ -58,15 +66,10 @@ public final class Next extends PathFormula implements UnaryExpr {
 	}
 
 	@Override
-	public Formula obligation_formula() {
-		return new Next((StateFormula) _arg.obligation_formula());
-	}
-
-	@Override
 	public boolean is_propositional() {
 		return false;
 	}
-	
+
 
 
 }

@@ -12,7 +12,9 @@ public abstract class Formula {
 
 	public abstract boolean is_beta();
 	
-	public abstract Formula obligation_formula(); 
+	public abstract Formula obligation_formula();
+	
+	public abstract boolean is_propositional();
 
 	
 }
