@@ -9,7 +9,11 @@ import dctl.formulas.True;
 
 
 public abstract class TableauxNode {
+	
+	protected static int id_gen = 0;
 
+	public transient int id;
+	
 	public Set<StateFormula> formulas;
 	
 	public boolean faulty;
@@ -42,6 +46,5 @@ public abstract class TableauxNode {
 			return false;
 		return true;
 	}
-	
 	
 }

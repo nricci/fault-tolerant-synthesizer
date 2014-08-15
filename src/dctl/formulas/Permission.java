@@ -27,7 +27,14 @@ public final class Permission extends Quantifier {
 			p = new And((StateFormula) ((WeakUntil) _arg).arg_left().obligation_formula(),p);
 			deco.add(p);
 			return deco;
-		}
+		} else if (_arg instanceof Globally) {
+			Set<StateFormula> deco = new HashSet<StateFormula>();
+			deco.add(((Globally) _arg).arg());
+			StateFormula p = new Exists(new Next(this));
+			p = new And(((Globally) _arg).arg(),p);
+			deco.add(p);
+			return deco;
+		} 
 		return null;
 	}
 	
@@ -43,6 +50,11 @@ public final class Permission extends Quantifier {
 	@Override
 	public boolean is_propositional() {
 		return false;
+	}
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		throw new Error("Inaplicable operation");
 	}
 
 }

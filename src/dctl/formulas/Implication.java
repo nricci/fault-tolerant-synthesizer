@@ -42,11 +42,10 @@ private StateFormula _left;
 
 	@Override
 	public Set<StateFormula> get_decomposition() {
-		throw new Error("Not Supported Yet. Class Only for parsing.");
-		//Set<StateFormula> deco = new HashSet<StateFormula>();
-		//deco.add(_left);
-		//deco.add(_right);
-		//return deco;
+		Set<StateFormula> deco = new HashSet<StateFormula>();
+		deco.add(_left.negate());
+		deco.add(_right);
+		return deco;
 	}
 
 	public String toString() {
@@ -89,14 +88,26 @@ private StateFormula _left;
 
 	@Override
 	public Formula obligation_formula() {
-		throw new Error("Not Supported Yet. Class Only for parsing.");
-		//return new Implication((StateFormula)_left.obligation_formula(),(StateFormula)_right.obligation_formula());
+		//throw new Error("Not Supported Yet. Class Only for parsing.");
+		return new Implication((StateFormula)_left.obligation_formula(),(StateFormula)_right.obligation_formula());
 	}
 
 
 	@Override
 	public boolean is_propositional() {
 		return _left.is_propositional() && _right.is_propositional();
+	}
+
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		return !_left.sat(set) || _right.sat(set);
+	}
+
+
+	@Override
+	public StateFormula negate() {
+		return new And(_left,_right.negate());
 	}
 
 }

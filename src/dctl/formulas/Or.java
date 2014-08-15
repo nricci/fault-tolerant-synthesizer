@@ -95,6 +95,18 @@ public final class Or extends PropositionalFormula implements BinaryExpr {
 	public boolean is_propositional() {
 		return _left.is_propositional() && _right.is_propositional();
 	}
+
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		return _left.sat(set) || _right.sat(set);
+	}
+
+
+	@Override
+	public StateFormula negate() {
+		return new And(_left.negate(),_right.negate());
+	}
 	
 
 }

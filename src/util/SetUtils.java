@@ -5,7 +5,21 @@ import java.util.Set;
 
 public final class SetUtils {
 	
+	public static <E> Set<E> make_set() { return new HashSet<E>(); }
+	
+	public static <E> Set<E> make_set(E ... elems) { 
+		Set<E> res = new HashSet<E>();
+		for (E x : elems)
+			res.add(x);
+		return res;
+	}
+	
+	
+	
 	public static <E> Set<E> union(Set<E> s1, Set<E> s2) {
+		assert s1 != null && s2 != null : 
+			"s1 != null && s2 != null : s1="+s1+",s2="+s2;
+		
 		Set<E> r = new HashSet<E>();
 		r.addAll(s1);
 		r.addAll(s2);		
@@ -13,6 +27,9 @@ public final class SetUtils {
 	}
 	
 	public static <E> Set<E> union(Set<E> s, E ... elems) {
+		assert(s != null);
+		assert(elems != null);
+		
 		Set<E> r = new HashSet<E>();
 		r.addAll(s);
 		for (E x : elems)
@@ -20,7 +37,19 @@ public final class SetUtils {
 		return r;
 	}
 	
+	public static <E> Set<E> intersection(Set<E> s1, Set<E> s2) {
+		assert(s1 != null && s2 != null);
+		
+		Set<E> r = new HashSet<E>();
+		for(E x : s1)
+			if (s2.contains(x))
+				r.add(x);		
+		return r;
+	}
+	
 	public static <E> Set<E> minus(Set<E> s1, Set<E> s2) {
+		assert(s1 != null && s2 != null);
+		
 		Set<E> r = new HashSet<E>();
 		for(E x : s1)
 			if (!s2.contains(x))
@@ -35,7 +64,17 @@ public final class SetUtils {
 			if (r.contains(x))
 				r.remove(x);		
 		return r;
-	}	
+	}
+	
+	public static <E,F> Set<Pair<E,F>> times(Set<E> s1, Set<F> s2) {
+		assert(s1 != null && s2 != null);
+		
+		Set<Pair<E,F>> r = new HashSet<>();
+		for(E x : s1)
+			for(F y : s2)
+				r.add(new Pair(x,y));		
+		return r;
+	}
 	
 	
 	public static <E> boolean some(Set<E> set, Predicate<E> prop) {

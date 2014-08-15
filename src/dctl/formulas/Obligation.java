@@ -27,6 +27,12 @@ public final class Obligation extends Quantifier {
 			p = new And((StateFormula) ((WeakUntil) _arg).arg_left().obligation_formula(),p);
 			deco.add(p);
 			return deco;
+		} else if (_arg instanceof Globally) {
+			Set<StateFormula> deco = new HashSet<StateFormula>();
+			deco.add((StateFormula) ((Globally) _arg).arg().obligation_formula());
+			StateFormula p = new Forall(new Next(this));
+			deco.add(p);
+			return deco;
 		}
 		return null;
 	}
@@ -43,6 +49,11 @@ public final class Obligation extends Quantifier {
 	@Override
 	public boolean is_propositional() {
 		return false;
+	}
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		throw new Error("Inaplicable operation");
 	}
 	
 }

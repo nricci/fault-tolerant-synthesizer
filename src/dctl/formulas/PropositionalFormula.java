@@ -1,3 +1,7 @@
 package dctl.formulas;
 
-public abstract class PropositionalFormula extends StateFormula {}
+public abstract class PropositionalFormula extends StateFormula {
+	
+	
+	
+}

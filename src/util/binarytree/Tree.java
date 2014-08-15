@@ -3,36 +3,36 @@ package util.binarytree;
 import java.util.HashSet;
 import java.util.Set;
 
-public class BinaryTree<E> {
+public class Tree<E> {
 
 
-	private  BinaryTree<E> left;
-	private  BinaryTree<E> right;
+	private  Tree<E> left;
+	private  Tree<E> right;
 	private  E value;
 
-	public BinaryTree(E value) {
+	public Tree(E value) {
 		this.left = null ;
 		this.right = null ;
 		this.value = value;
 	} 
 
-	public BinaryTree(E value, BinaryTree<E> left, BinaryTree<E> right) {
+	public Tree(E value, Tree<E> left, Tree<E> right) {
 		this.value = value;
 		this.left= left;
 		this.right = right;
 	}
 	
-	public void set_left(BinaryTree<E> left) {
+	public void set_left(Tree<E> left) {
 		this.left = left;
 	}
 	
-	public void set_right(BinaryTree<E> right) {
+	public void set_right(Tree<E> right) {
 		this.right = right;
 	}
 	
-	public BinaryTree<E> left() {return this.left;}
+	public Tree<E> left() {return this.left;}
 	
-	public BinaryTree<E> right() {return this.right;}
+	public Tree<E> right() {return this.right;}
 
 	
 	

@@ -97,5 +97,15 @@ public final class Negation extends PropositionalFormula implements UnaryExpr {
 		return _arg.is_propositional();
 	}
 	
+	@Override
+	public boolean is_literal() {
+		return this.arg() instanceof Proposition;
+	}
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		return !_arg.sat(set);
+	}
+	
 	
 }

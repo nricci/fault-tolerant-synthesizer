@@ -1,5 +1,7 @@
 package dctl.formulas;
 
+import java.util.Set;
+
 public final class Proposition extends Atom {
 
 	private String _name;
@@ -49,6 +51,21 @@ public final class Proposition extends Atom {
 	@Override
 	public boolean is_propositional() {
 		return true;
+	}
+	
+	@Override
+	public boolean is_literal() {
+		return true;
+	}
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		return set.contains(this);
+	}
+
+	@Override
+	public StateFormula negate() {
+		return new Negation(this);
 	}
 	
 	

@@ -1,5 +1,7 @@
 package dctl.formulas;
 
+import java.util.Set;
+
 public final class False extends Atom {
 	
 	public String toString() {
@@ -26,6 +28,16 @@ public final class False extends Atom {
 	@Override
 	public boolean is_propositional() {
 		return true;
+	}
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		return false;
+	}
+
+	@Override
+	public StateFormula negate() {
+		return new True();
 	}
 	
 }

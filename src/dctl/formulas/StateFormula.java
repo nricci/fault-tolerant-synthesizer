@@ -14,9 +14,7 @@ public abstract class StateFormula extends Formula {
 		return false;
 	}
 	
-	public StateFormula negate() {
-		return new Negation(this);
-	}
+	public abstract StateFormula negate();
 	
 	public abstract Set<StateFormula> get_decomposition();
 

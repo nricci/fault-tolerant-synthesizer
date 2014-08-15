@@ -1,5 +1,7 @@
 package dctl.formulas;
 
+import java.util.Set;
+
 public class Globally extends PathFormula implements UnaryExpr {
 
 	private StateFormula _arg;
@@ -9,7 +11,7 @@ public class Globally extends PathFormula implements UnaryExpr {
 	}
 	
 	@Override
-	public Formula arg() {
+	public StateFormula arg() {
 		return _arg;
 	}
 
@@ -36,8 +38,8 @@ public class Globally extends PathFormula implements UnaryExpr {
 
 	@Override
 	public Formula obligation_formula() {
-		throw new Error("Not Supported Yet. Class Only for parsing.");
-		//return new Until((StateFormula) _left.obligation_formula(),(StateFormula) _right.obligation_formula());
+		//throw new Error("Not Supported Yet. Class Only for parsing.");
+		return new Globally((StateFormula) _arg.obligation_formula());
 	}
 
 	@Override
@@ -68,6 +70,11 @@ public class Globally extends PathFormula implements UnaryExpr {
 	@Override
 	public boolean is_propositional() {
 		return false;
+	}
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		throw new Error("Inaplicable operation");
 	}
 
 

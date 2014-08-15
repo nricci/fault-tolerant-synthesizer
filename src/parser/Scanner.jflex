@@ -19,7 +19,7 @@ InputCharacter = [^\r\n]
 Comment = {TraditionalComment} | {EndOfLineComment}}
 
 TraditionalComment   = "/*" [^*] ~"*/" | "/*" "*"+ "/"
-EndOfLineComment     = "//" {InputCharacter}* {LineTerminator}
+EndOfLineComment     = "// " {InputCharacter}* {LineTerminator}
 
 %eofval{
     return sf.newSymbol("EOF",sym.EOF);
@@ -45,7 +45,8 @@ EndOfLineComment     = "//" {InputCharacter}* {LineTerminator}
 "X" { return sf.newSymbol("Next",sym.NEXT, new String(yytext())); }
 "U" { return sf.newSymbol("Until",sym.UNTIL, new String(yytext()) ); }
 "W" { return sf.newSymbol("WeakUntil",sym.WEAKUNTIL, new String(yytext()) ); }
-"T" { return sf.newSymbol("True Value",sym.TRUE, new String(yytext()) ); }
+"True" { return sf.newSymbol("True Value",sym.TRUE, new String(yytext()) ); }
+"False" { return sf.newSymbol("True Value",sym.FALSE, new String(yytext()) ); }
 "!" { return sf.newSymbol("Negation",sym.NEG, new String(yytext()) ); }
 "->" { return sf.newSymbol("Implication",sym.IMPLIES, new String(yytext())); }
 "<->" { return sf.newSymbol("Equivalence",sym.EQUIVALENCE, new String(yytext())); }

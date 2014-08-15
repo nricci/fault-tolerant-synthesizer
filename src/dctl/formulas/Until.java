@@ -1,5 +1,7 @@
 package dctl.formulas;
 
+import java.util.Set;
+
 public final class Until extends PathFormula implements BinaryExpr {
 
 	private StateFormula _left;
@@ -79,6 +81,11 @@ public final class Until extends PathFormula implements BinaryExpr {
 	@Override
 	public boolean is_propositional() {
 		return false;
+	}
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		throw new Error("Inaplicable operation");
 	}
 	
 

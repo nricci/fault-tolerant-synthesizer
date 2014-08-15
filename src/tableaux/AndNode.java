@@ -1,5 +1,6 @@
 package tableaux;
 
+import static dctl.formulas.Formula.prop_sat;
 import static util.SetUtils.minus;
 import static util.SetUtils.pick;
 import static util.SetUtils.union;
@@ -11,7 +12,7 @@ import java.util.Set;
 
 import util.Function;
 import util.Predicate;
-import util.binarytree.BinaryTree;
+import util.binarytree.Tree;
 import dctl.formulas.*;
 
 public class AndNode extends TableauxNode {
@@ -19,9 +20,19 @@ public class AndNode extends TableauxNode {
 
 	
 	public AndNode(Set<StateFormula> s) {
+		this.id = id_gen++;
 		faulty = false;
 		this.formulas = s;
 		formulas.add(new True());
+		
+		for(StateFormula f : this.formulas) {
+			if(f instanceof DeonticProposition) {
+				if(!prop_sat(this.formulas,((DeonticProposition) f).get_prop())) {
+					faulty = true;
+					break;	
+				}
+			}
+		}	
 	}
 	
 	public Set<OrNode> tiles() {
@@ -33,8 +44,9 @@ public class AndNode extends TableauxNode {
 		return res;
 	}
 	
-	public boolean sat(StateFormula f) {
-		assert(f instanceof Atom || f instanceof PropositionalFormula);
+	/*
+	 public boolean sat(StateFormula f) {
+	 	assert(f instanceof Atom || f instanceof PropositionalFormula);
 		
 		if(f instanceof True)
 			return true;
@@ -53,7 +65,7 @@ public class AndNode extends TableauxNode {
 		else
 			throw new Error("Missing Case...");		
 	}
-	
+	*/
 	
 	
 	
@@ -128,6 +140,10 @@ public class AndNode extends TableauxNode {
 		return res;
 	}
 
+	@Override
+	public String toString() {
+		return (faulty?"F":"") + "And-" + id;
+	}
 	
 	
 }

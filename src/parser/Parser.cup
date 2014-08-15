@@ -27,7 +27,7 @@ parser code {:
 
 
 terminal String EXIST, FORALL, PERMISSION, OBLIGATION, GLOBALLY, FUTURE, INTERFACE, SPECIFICATION, COMMA,
-                INITIALSTATE,LPAREN, RPAREN, NEXT, WEAKUNTIL, UNTIL, TRUE,  NEG, IMPLIES, EQUIVALENCE, AND, OR, SEMI, ID;
+                INITIALSTATE,LPAREN, RPAREN, NEXT, WEAKUNTIL, UNTIL, TRUE, FALSE,  NEG, IMPLIES, EQUIVALENCE, AND, OR, SEMI, ID;
 
 non terminal global_spec, interface, formulas, var_list;
 non terminal StateFormula formula, state_form;
@@ -69,7 +69,8 @@ formula 	::= state_form:s SEMI		{: RESULT = s; :};
 
 
 
-state_form	::=		TRUE:t 												{: RESULT = new True(); :}
+state_form	::=		TRUE 												{: RESULT = new True(); :}
+			| 		FALSE 												{: RESULT = new False();  :}
             | 		ID:i 												{: RESULT = new Proposition(i);  :}
             | 		NEG state_form:p 									{: RESULT = new Negation(p);  :}
             

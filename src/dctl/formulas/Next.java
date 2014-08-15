@@ -1,5 +1,7 @@
 package dctl.formulas;
 
+import java.util.Set;
+
 public final class Next extends PathFormula implements UnaryExpr {
 
 	private StateFormula _arg;
@@ -65,6 +67,11 @@ public final class Next extends PathFormula implements UnaryExpr {
 	@Override
 	public boolean is_propositional() {
 		return false;
+	}
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		throw new Error("Inaplicable operation");
 	}
 	
 

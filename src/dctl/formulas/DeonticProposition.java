@@ -1,5 +1,7 @@
 package dctl.formulas;
 
+import java.util.Set;
+
 public final class DeonticProposition extends Atom {
 
 	private StateFormula _proposition;
@@ -63,6 +65,20 @@ public final class DeonticProposition extends Atom {
 	@Override
 	public boolean is_propositional() {
 		return false;
+	}
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		throw new Error("Unsupported operation.");
+	}
+
+	@Override
+	public StateFormula negate() {
+		return new Negation(this);
+		// Creo que teoricamente tendria que ser esta
+		//return this.get_prop().negate();
+		// Pero dejo la mas rustica por las dudas que le erre
+		// asi es mas facil debugear
 	}
 
 	

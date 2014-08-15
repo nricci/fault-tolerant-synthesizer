@@ -1,5 +1,6 @@
 package dctl.formulas;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class Equivalence extends PropositionalFormula implements BinaryExpr {
@@ -31,21 +32,21 @@ private StateFormula _left;
 	
 	@Override
 	public final boolean is_alpha() {
-		return false;
-	}
-
-	@Override
-	public final boolean is_beta() {
 		return true;
 	}
 
 	@Override
+	public final boolean is_beta() {
+		return false;
+	}
+
+	@Override
 	public Set<StateFormula> get_decomposition() {
-		throw new Error("Not Supported Yet. Class Only for parsing.");
-		//Set<StateFormula> deco = new HashSet<StateFormula>();
-		//deco.add(_left);
-		//deco.add(_right);
-		//return deco;
+		//throw new Error("Not Supported Yet. Class Only for parsing.");
+		Set<StateFormula> deco = new HashSet<StateFormula>();
+		deco.add(new Implication(_left,_right));
+		deco.add(new Implication(_right,_left));
+		return deco;
 	}
 
 	public String toString() {
@@ -88,14 +89,35 @@ private StateFormula _left;
 
 	@Override
 	public Formula obligation_formula() {
-		throw new Error("Not Supported Yet. Class Only for parsing.");
-		//return new Implication((StateFormula)_left.obligation_formula(),(StateFormula)_right.obligation_formula());
+		//throw new Error("Not Supported Yet. Class Only for parsing.");
+		return new Or(
+				new And(
+						(StateFormula)_left,
+						(StateFormula)_right
+						),
+				new And(
+						(StateFormula)_left.negate(),
+						(StateFormula)_right.negate()
+						)
+				).obligation_formula();
 	}
 
 
 	@Override
 	public boolean is_propositional() {
 		return _left.is_propositional() && _right.is_propositional();
+	}
+
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		throw new Error("Unsupported");
+	}
+
+
+	@Override
+	public StateFormula negate() {
+		return new Or(new And(_left,_right.negate()),new And(_left.negate(),_right));
 	}
 
 }

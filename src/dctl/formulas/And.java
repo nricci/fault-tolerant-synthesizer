@@ -94,9 +94,25 @@ public final class And extends PropositionalFormula implements BinaryExpr {
 
 	@Override
 	public boolean is_propositional() {
-		return _left.is_propositional() && _right.is_propositional();
+		// TODO Auto-generated method stub
+		return false;
 	}
-	
+
+
+	@Override
+	protected boolean sat(Set<StateFormula> set) {
+		return _left.sat(set) && _right.sat(set);
+	}
+
+
+	@Override
+	public StateFormula negate() {
+		return new Or(_left.negate(),_right.negate());
+	}
+
+
+
+
 	
 
 
