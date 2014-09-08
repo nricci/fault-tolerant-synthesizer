@@ -2,6 +2,8 @@ package dctl.formulas;
 
 import java.util.Set;
 
+import util.XMLBuilder;
+
 public final class True extends Atom {
 	
 	public String toString() {
@@ -40,4 +42,8 @@ public final class True extends Atom {
 		return new False();
 	}
 	
+	@Override
+	public void to_xml(XMLBuilder b) {
+		b.open_self_close("true");		
+	}
 }

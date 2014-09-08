@@ -2,6 +2,8 @@ package dctl.formulas;
 
 import java.util.Set;
 
+import util.XMLBuilder;
+
 public final class DeonticProposition extends Atom {
 
 	private StateFormula _proposition;
@@ -79,6 +81,13 @@ public final class DeonticProposition extends Atom {
 		//return this.get_prop().negate();
 		// Pero dejo la mas rustica por las dudas que le erre
 		// asi es mas facil debugear
+	}
+
+	@Override
+	public void to_xml(XMLBuilder b) {
+		b.open("deontic-proposition");
+		this._proposition.to_xml(b);
+		b.close();		
 	}
 
 	

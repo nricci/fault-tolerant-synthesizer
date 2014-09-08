@@ -3,6 +3,8 @@ package dctl.formulas;
 import java.util.HashSet;
 import java.util.Set;
 
+import util.XMLBuilder;
+
 public final class Permission extends Quantifier {
 
 	public Permission(PathFormula arg) {
@@ -57,4 +59,11 @@ public final class Permission extends Quantifier {
 		throw new Error("Inaplicable operation");
 	}
 
+	@Override
+	public void to_xml(XMLBuilder b) {
+		b.open("permission");
+		this._arg.to_xml(b);
+		b.close();		
+	}
+	
 }

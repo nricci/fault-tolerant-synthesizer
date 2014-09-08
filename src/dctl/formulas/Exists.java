@@ -3,6 +3,8 @@ package dctl.formulas;
 import java.util.HashSet;
 import java.util.Set;
 
+import util.XMLBuilder;
+
 public final class Exists extends Quantifier {
 
 	public Exists(PathFormula arg) {
@@ -55,6 +57,13 @@ public final class Exists extends Quantifier {
 	@Override
 	protected boolean sat(Set<StateFormula> set) {
 		throw new Error("Inaplicable operation");
+	}
+
+	@Override
+	public void to_xml(XMLBuilder b) {
+		b.open("exists");
+		this._arg.to_xml(b);
+		b.close();
 	}
 	
 }

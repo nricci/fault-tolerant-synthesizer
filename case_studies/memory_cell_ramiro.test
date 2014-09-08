@@ -1,0 +1,62 @@
+--Interface
+
+r0, w0, r1, w1;
+
+--InitialState
+
+/* Initial State: the three bits contain the same value. */
+
+((!c0 && !c1 && !c2 && w0 && write_ind) || (c0 && c1 && c2 && w1 && write_ind));
+
+--Specification
+
+/* A safety property of the system: the three bits should coincide. */
+
+OG( (c0 && c1 && c2) || (!c0 && !c1 && !c2) );
+
+/* The value read from the cell ought to coincide with the last writing performed. */
+
+OG( (r0 -> w0) || (r1 -> w1) );
+
+/* If a zero has been written, then w1 is false and vice versa. */
+
+AG( w0 <-> !w1);
+
+/* Variable w1 only changes when w0 becomes true. */
+
+AG( A(w0 U w1));
+
+/* Variable w1 only changes when w0 becomes true. */
+
+AG ( A(w1 U w0) );
+
+/* The reading of a 1 corresponds to the value read in the majority. */
+
+AG( r1 <-> ( (c0 && c1 ) || (c0 && c2) || (c1 && c2) ) );
+
+/* The reading of a 0 corresponds to the value read in the majority. */
+
+AG( r0 <-> ( (!c0 && !c1) || (!c0 && !c2) || (!c1 && !c2)) );
+
+/* If the user wants to write 1, then in the next step the memory will be setup to one. */
+
+AG( write_one -> AX(  (w1 && write_ind && c0 && c1 && c2)) );
+
+/* If the user wants to write 0, then in the next step the memory will be setup to zero. */
+
+AG( write_zero -> AX(  ( w0 && write_ind && !c0 && !c1 && !c2)));
+
+/* At any moment the user may decide to write a value.*/
+
+AG ( (w0 && write_ind && !c0 && !c1 && !c2) -> AX( (!c0 && !c1 && !c2 && w0 && write_zero) ||  
+						    (!c0 && !c1 && !c2 && w0 && write_one) || 
+						    (w0 && write_ind && !c0 && !c1 && !c2)) );
+
+AG ( (w1 && write_ind && c0 && c1 && c2) -> AX( (w1 && write_zero && c0 && c1 && c2) || 
+						 (w1 && write_one && c0 && c1 && c2) || 
+						 (w1 && write_ind && c0 && c1 && c2)) );
+
+
+
+
+

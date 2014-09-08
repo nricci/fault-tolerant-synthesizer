@@ -2,6 +2,8 @@ package dctl.formulas;
 
 import java.util.Set;
 
+import util.XMLBuilder;
+
 public final class Until extends PathFormula implements BinaryExpr {
 
 	private StateFormula _left;
@@ -88,7 +90,13 @@ public final class Until extends PathFormula implements BinaryExpr {
 		throw new Error("Inaplicable operation");
 	}
 	
-
+	@Override
+	public void to_xml(XMLBuilder b) {
+		b.open("until");
+		_left.to_xml(b);
+		_right.to_xml(b);
+		b.close();		
+	}
 	
 	
 }

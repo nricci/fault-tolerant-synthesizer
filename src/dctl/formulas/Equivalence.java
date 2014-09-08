@@ -3,6 +3,8 @@ package dctl.formulas;
 import java.util.HashSet;
 import java.util.Set;
 
+import util.XMLBuilder;
+
 public class Equivalence extends PropositionalFormula implements BinaryExpr {
 
 private StateFormula _left;
@@ -118,6 +120,15 @@ private StateFormula _left;
 	@Override
 	public StateFormula negate() {
 		return new Or(new And(_left,_right.negate()),new And(_left.negate(),_right));
+	}
+
+
+	@Override
+	public void to_xml(XMLBuilder b) {
+		b.open("iff");
+		_left.to_xml(b);
+		_right.to_xml(b);
+		b.close();		
 	}
 
 }

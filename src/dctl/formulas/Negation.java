@@ -3,6 +3,8 @@ package dctl.formulas;
 import java.util.HashSet;
 import java.util.Set;
 
+import util.XMLBuilder;
+
 public final class Negation extends PropositionalFormula implements UnaryExpr {
 
 	private StateFormula _arg;
@@ -105,6 +107,13 @@ public final class Negation extends PropositionalFormula implements UnaryExpr {
 	@Override
 	protected boolean sat(Set<StateFormula> set) {
 		return !_arg.sat(set);
+	}
+
+	@Override
+	public void to_xml(XMLBuilder b) {
+		b.open("not");
+		this._arg.to_xml(b);
+		b.close();		
 	}
 	
 	

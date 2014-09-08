@@ -1,0 +1,30 @@
+(bit0 && bit1 && bit2 && read) || 
+(!bit0 && !bit1 && !bit2 && !read);
+
+A(
+	G(
+		(bit0 && bit1 && bit2 && read) ||
+		(bit0 && bit1 && !bit2 && read) ||
+		(bit0 && !bit1 && bit2 && read) ||
+		(bit0 && !bit1 && !bit2 && !read) ||
+		(!bit0 && bit1 && bit2 && read) ||
+		(!bit0 && bit1 && !bit2 && !read) ||
+		(!bit0 && !bit1 && bit2 && !read) ||
+		(!bit0 && !bit1 && !bit2 && !read)
+
+	)
+);
+
+O(
+	G(
+		(bit0 && bit1 && bit2 && read) || 
+		(!bit0 && !bit1 && !bit2 && !read)
+	)
+);
+
+O(
+	G(
+		(read -> write) && (!read -> !write)
+	)
+);
+

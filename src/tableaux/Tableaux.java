@@ -49,7 +49,7 @@ public class Tableaux {
 	
 	private Specification _spec;
 	
-	private TableauxNode root;
+	public TableauxNode root;
 	
 	private LinkedList<TableauxNode> frontier;
 	
@@ -77,7 +77,7 @@ public class Tableaux {
 		commited_nodes = new HashSet<TableauxNode>();
 		this._spec = _spec;
 		
-		OrNode root = new OrNode(_spec._init);
+		root = new OrNode(_spec._init);
 		graph.addVertex(root);		
 		frontier.add(root);
 		
@@ -516,12 +516,14 @@ public class Tableaux {
 		int count = 0;
 		
 		for(TableauxNode n : graph.vertexSet()) {
+			if(n instanceof AndNode)
 			for(StateFormula f : n.formulas) {
 				if ((f instanceof Exists)
 					&& (((Exists) f).arg() instanceof Until)
-					&& (!reach(n,new HashSet<TableauxNode>(),
+					&& dag((AndNode) n, (Quantifier) f) == null)
+					/*(!reach(n,new HashSet<TableauxNode>(),
 						((Until)(((Exists) f).arg())).arg_left(),
-						((Until)(((Exists) f).arg())).arg_right()))) {
+						((Until)(((Exists) f).arg())).arg_right())))*/ {
 					delete_node(n);
 					count++;
 				}
@@ -535,12 +537,14 @@ public class Tableaux {
 		int count = 0;
 		
 		for(TableauxNode n : graph.vertexSet()) {
+			if(n instanceof AndNode)
 			for(StateFormula f : n.formulas) {
 				if ((f instanceof Forall)
 					&& (((Forall) f).arg() instanceof Until)
-					&& (!full_subdag(n,new HashSet<TableauxNode>(),
+					&& dag((AndNode) n, (Quantifier) f) == null) 
+					/*(!full_subdag(n,new HashSet<TableauxNode>(),
 						((Until)(((Forall) f).arg())).arg_left(),
-						((Until)(((Forall) f).arg())).arg_right()))) {
+						((Until)(((Forall) f).arg())).arg_right())))*/ {			
 					delete_node(n);
 					count++;
 				}
@@ -794,7 +798,7 @@ public class Tableaux {
 	 * ******************************************* 
 	*/
 	
-	public void inject_faults() {
+	public Map<AndNode,AndNode> inject_faults() {
 		boolean debug = false;
 		
 		// This mapping specifies all the point where a fault 
@@ -806,10 +810,16 @@ public class Tableaux {
 		// been injected.
 		Set<Pair<AndNode,DeonticProposition>> injected_faults = new HashSet<>();
 
+		// Masking Relation
+		Map<AndNode,AndNode> maskedBy = new HashMap<AndNode, AndNode>();
+		Set<AndNode> nonmasking_faults = new HashSet<AndNode>();
+		
 		pending_faults = minus(detect_fault_injection_points(),injected_faults);
 		
 		int i = 0;
-		if(debug) Debug.to_file(
+		final int step = 100;
+		if(debug && i % step == 0)
+			Debug.to_file(
 				Debug.to_dot(this.graph, Debug.default_node_render), 
 				"output/inject_step" + i + ".dot"
 			);
@@ -817,29 +827,80 @@ public class Tableaux {
 		while(!pending_faults.isEmpty()) {
 			i++;
 			
-			if(debug) System.out.println("");
+			if(debug && i % step == 0) System.out.println("");
 			//if(debug) System.out.println("[step " + i + "] pending_faults : " + pending_faults);
 			//if(debug) System.out.println("[step " + i + "] injected_faults : " + injected_faults);
 			
+			Pair<AndNode,DeonticProposition> p = pending_faults.stream().findFirst().get();
+           
+			if(debug && i % step == 0) System.out.println("[step " + i + "] injecting  : " + p);
+			Set<OrNode> fault_generator = inject_fault(p.first, p.second.get_prop());
 			
-			Pair<AndNode,DeonticProposition> p = pending_faults.stream().findAny().get();
-			if(debug) System.out.println("[step " + i + "] injecting  : " + p);
-			Set<?> injected_nodes = inject_fault(p.first, p.second.get_prop());
-			if(debug) System.out.println("[step " + i + "] injected faults : " + injected_nodes);
+			List<TableauxNode> faults = new LinkedList();
+			for(OrNode o : fault_generator) {
+				faults.addAll(expand(o));
+			}
+			for(TableauxNode n : faults) {
+				AndNode fault = (AndNode) n;	
+				if(sublabeling(p.first).equals(sublabeling(fault)))
+					// fault is directly masked
+					maskedBy.put(fault, p.first);
+				else {
+					// Note that the injection point whether is a Norm node
+					// or a fault comes from a previous iteration and should
+					// have its succesors generated
+					Set<AndNode> candidates = new HashSet<AndNode>();
+					for(TableauxNode n1 : succesors(p.first,graph))
+						for(TableauxNode n2 : succesors(n1,graph)) {
+							assert n2 instanceof AndNode;
+							if(sublabeling(n2).equals(sublabeling(fault)))
+								candidates.add((AndNode) n2);
+						}
+					
+					if(!candidates.isEmpty())
+						// pick any
+						maskedBy.put(fault, candidates.iterator().next());
+					else
+						nonmasking_faults.add(fault);					
+				}		
+			}			
+			if(debug && i % step == 0)
+				System.out.println("[step " + i + "] injected faults : " + faults);
+			if(debug && i % step == 0) 
+				faults.stream().forEach(x -> 
+					System.out.println("\t " + x + " is masked by " + maskedBy.get(x))				
+					);
+			
+			
 			do_tableau();
-			if(debug) System.out.println("[step " + i + "] to_delete : " + to_delete);
+			if (debug && i % step == 0)
+				System.out.println("[step " + i + "] to_delete : " + to_delete);
 			
-			System.out.println("[step " + i + "] delete : " + delete_inconsistent());
+			if (debug && i % step == 0) 
+				System.out.println("[step " + i + "] delete : " + delete_inconsistent());
 			pending_faults.remove(p);
 			injected_faults.add(p);
 				
-			if(debug) Debug.to_file(
+			if (debug && i % step == 0)
+				Debug.to_file(
 					Debug.to_dot(this.graph, Debug.default_node_render), 
 					"output/inject_step" + i + ".dot"
 				);
+			
+			if (debug && i % step == 0) 
+				System.out.println("[step " + i + "] nodes : " + graph.vertexSet().size()
+					+ " injected_faults : " + injected_faults.size() + " pending faults : " 
+					+ pending_faults.size()); 
+			
 			pending_faults.addAll(minus(detect_fault_injection_points(),injected_faults));
+			
+			if (debug && i % step == 0)
+				System.out.println("[step " + i + "] new pending faults : " 
+					+ pending_faults.size()); 
 			commit();
 		}
+		if (debug) System.out.println("fault-injection success."); 
+		return maskedBy;
 	}
 		
 		
@@ -867,23 +928,61 @@ public class Tableaux {
 	public Set<OrNode> inject_fault(AndNode n, StateFormula p) {
 		//assert n.formulas.contains(p);
 		assert p.is_literal();		
-		
-		Set<StateFormula> new_forms = union(n.formulas, 
-											new Exists(new Next(p.negate()))
-									);
-		
-		Set<StateFormula> n_props_without_p = n.formulas
+				
+		Set<Proposition> deontically_affected_props = n.formulas
 				.stream()
-				.filter(x -> !x.equals(p))
-				.filter(x -> x.is_literal())
+				.filter(x -> x instanceof DeonticProposition)
+				.map(x -> (DeonticProposition) x)
+				.map((DeonticProposition x) -> x.get_prop())
+				.map(x -> (x instanceof Negation)?((Negation) x).arg():x)
+				.map(x -> (Proposition) x)
 				.collect(Collectors.toSet());
+		
+		//System.out.println("deontically_affected_props : " + deontically_affected_props);
+				
+		Set<StateFormula> literals = n.formulas
+				.stream()
+				.filter(x -> x.is_literal())
+				.filter(x -> 
+							(x instanceof Proposition && deontically_affected_props.contains((Proposition) x)) ||
+							(x instanceof Negation && deontically_affected_props.contains(((Negation) x).arg()))
+						
+						)
+				.collect(Collectors.toSet());
+
+		//System.out.println("literals : " + literals);
+		
+		Set<StateFormula> next_literals = n.formulas
+				.stream()
+				.filter(x -> x.is_literal())
+				.filter(x -> 
+							(x instanceof Proposition && deontically_affected_props.contains((Proposition) x)) ||
+							(x instanceof Negation && deontically_affected_props.contains(((Negation) x).arg()))
+						
+						)
+				.map(x -> x.equals(p)?x.negate():x)
+				.collect(Collectors.toSet());
+
+		//System.out.println("next_literals : " + next_literals);
+		
+		StateFormula next_state_descriptor = 				
+			new Exists(
+				new Next(
+						next_literals.stream()
+						.reduce(new True(), (x,y) -> new And(x,y))
+						)
+			);
+		
+		//System.out.println("next_state_descriptor : " + next_state_descriptor);
+		
+		Set<StateFormula> new_forms = union(n.formulas, next_state_descriptor);
 		
 		AndNode ghost = new AndNode(new_forms);
 		Set<OrNode> faulty_succs = ghost.tiles();
 		
-		for(OrNode o : faulty_succs) {
-			o.formulas.addAll(n_props_without_p);
-		}
+		//for(OrNode o : faulty_succs) {
+		//	o.formulas.addAll(carry_on_formulas);
+		//}
 		
 		/*System.out.println("------------------");
 		System.out.println("AndNode : " + n + ", Proposition : "+p);
@@ -896,6 +995,7 @@ public class Tableaux {
 			graph.addVertex(f);
 			graph.addEdge(n, f);
 		}
+	
 		return faulty_succs;
 	}
 	
@@ -979,7 +1079,7 @@ public class Tableaux {
 		
 		boolean change = false;
 		do {
-			System.out.println("non_masking_relation_debug : " + rel);
+			//System.out.println("non_masking_relation_debug : " + rel);
 			change = false;
 			remove.clear();
 			for(Pair<AndNode,AndNode> p : rel) {
@@ -1005,7 +1105,7 @@ public class Tableaux {
 			rel.removeAll(remove);
 		} while (change);
 	
-		System.out.println("non_masking_relation_debug : " + rel);
+		//System.out.println("non_masking_relation_debug : " + rel);
 		return rel;		
 	}
 	
@@ -1269,7 +1369,7 @@ public class Tableaux {
 	private DirectedGraph<TableauxNode, DefaultEdge> dag_extract_AU_dag(AndNode n, Map<TableauxNode,Integer> tag) {
 		assert n != null;
 		assert tag != null;
-		System.out.println("dag_extract_AU_dag hi");
+		//System.out.println("dag_extract_AU_dag hi");
 		
 		// Extracting the dag
 		DirectedGraph<TableauxNode, DefaultEdge> _dag = new DefaultDirectedGraph<TableauxNode, DefaultEdge>(DefaultEdge.class);
@@ -1306,7 +1406,7 @@ public class Tableaux {
 				_halt &= x instanceof AndNode && tag.get(x) != null && tag.get(x) == 0;    				
 		}
 		
-		System.out.println("dag_extract_AU_dag bye");
+		//System.out.println("dag_extract_AU_dag bye");
 		assert _dag != null;
 		return _dag;
 	}
@@ -1530,7 +1630,7 @@ public class Tableaux {
 	 * ******************************************* 
 	*/
 	
-	public DirectedGraph<ModelNode, DefaultEdge> frag(AndNode n) {	
+	public DirectedGraph<ModelNode, DefaultEdge> frag(AndNode n) {		
 		// Filtering eventuality formulas
 		LinkedList<Quantifier> eventuality_formulas = new LinkedList<Quantifier>();
 		for(StateFormula f : n.formulas) {
@@ -1545,23 +1645,12 @@ public class Tableaux {
 		// Constructing Fragment
 		DirectedGraph<ModelNode, DefaultEdge> res = new DefaultDirectedGraph<ModelNode, DefaultEdge>(DefaultEdge.class);
 
-		int i = 0;
-		Map<ModelNode,String> cast_graph_tagging = new HashMap<ModelNode, String>();
-		for(ModelNode m : res.vertexSet())
-			cast_graph_tagging.put(m,m.toString());
-		to_dot_with_tags_2("output/frag_" + n + "/iteration_" + i++ + ".dot", res, cast_graph_tagging);
 		
 		if(!eventuality_formulas.isEmpty())	{
 			DirectedGraph<TableauxNode, DefaultEdge> current_dag;
 			Quantifier f = eventuality_formulas.poll();
 			current_dag = dag(n,f);
 			copy(res,null,current_dag,n);
-			
-			System.out.println("first res : " + res.vertexSet().size());
-			cast_graph_tagging = new HashMap<ModelNode, String>();
-			for(ModelNode m : res.vertexSet())
-				cast_graph_tagging.put(m,m.toString());
-			to_dot_with_tags_2("output/frag_" + n + "/iteration_" + i++  + "_" + f + ".dot", res, cast_graph_tagging);
 			
 			while(!eventuality_formulas.isEmpty()) {
 				Quantifier current_formula = eventuality_formulas.poll();
@@ -1573,14 +1662,19 @@ public class Tableaux {
 						copy(res, m, current_dag, node_in_tableaux);
 					}				
 				}
-				System.out.println("one loop res : " + res.vertexSet().size());
-				cast_graph_tagging = new HashMap<ModelNode, String>();
-				for(ModelNode m : res.vertexSet())
-					cast_graph_tagging.put(m,m.toString());
-				to_dot_with_tags_2("output/frag_" + n + "/iteration_" + i++ + "_" + current_formula + ".dot", res, cast_graph_tagging);
 			}		
-		}		
-		System.out.println("final res : " + res.vertexSet().size());
+		} else {
+			ModelNode frag_root = new ModelNode(n);
+			res.addVertex(frag_root);
+			for(TableauxNode o : succesors(n, graph)) {
+				ModelNode new_node = new ModelNode(succesors(o,graph).stream().findAny().get());
+				res.addVertex(new_node);
+				res.addEdge(frag_root, new_node);
+			}
+			
+		}
+		
+		assert res.vertexSet().size() >= 1;
 		return res;
 	}	
 	
@@ -1631,6 +1725,12 @@ public class Tableaux {
 		
 	}
 	
+	private ModelNode root(DirectedGraph<ModelNode, DefaultEdge> g) {
+		ModelNode res = g.vertexSet().stream().filter(x -> g.incomingEdgesOf(x).isEmpty()).findFirst().get();
+		//System.out.println("Debugging root@Tableaux: res = " + res);
+		return res;
+	}
+	
 	
 	
 	
@@ -1643,40 +1743,44 @@ public class Tableaux {
 	
 	
 	public DirectedGraph<ModelNode, DefaultEdge> extract_model() {
-		DirectedGraph<ModelNode, DefaultEdge> model = null;
-		HashMap<ModelNode,DefaultDirectedGraph<ModelNode, DefaultEdge>> fragment_roots = new HashMap<>();
+		DirectedGraph<ModelNode, DefaultEdge> model = new DefaultDirectedGraph<ModelNode, DefaultEdge>(DefaultEdge.class);
+		HashMap<ModelNode,DirectedGraph<ModelNode, DefaultEdge>> fragment_roots = new HashMap<>();
 		
 		
-		
-		//ModelNode x = new ModelNode(choose_block((OrNode) this.root));
-		//model.addVertex(x);
-		//frontier.push(x);
+	
 		DirectedGraph<ModelNode, DefaultEdge> current_frag = frag(choose_block((OrNode) this.root));
-		
+		ModelNode current_frag_root = root(current_frag);
+		fragment_roots.put(current_frag_root, current_frag);
+		copy(model,null,current_frag,null);
+		int i = 0;
+		Debug.to_file(Debug.to_dot(model, Debug.model_node_render_min), "output/model"+ i++ + ".dot");
 		while(!frontier(model).isEmpty()) {
 			ModelNode current = frontier(model).stream().findAny().get();
-			
-			
-			
-			
-			
-			//AndNode current = (AndNode) pick_by_formula_set(frontier(model).stream().findAny().get().formulas);
-			//for(TableauxNode or_succ : succesors(current,graph)) {
-			//	assert or_succ instanceof OrNode;
-				
-			//}
+			Optional<ModelNode> candidate = model
+					.vertexSet()
+					.stream()
+					.filter(x -> x.copyOf.equals(current.copyOf))
+					.filter(x -> fragment_roots.get(x) != null)	
+					.findFirst();
+			if(candidate.isPresent())
+				identify(model,candidate.get(),current);
+			else {
+				current_frag = frag((AndNode) current.copyOf);
+				current_frag_root = root(current_frag);
+				fragment_roots.put(current_frag_root, current_frag);
+				copy(model,current,current_frag,current_frag_root);
+			}
+			Debug.to_file(Debug.to_dot(model, Debug.model_node_render_min), "output/model"+ i++ + ".dot");
 		}
-		
-		
-		
-		return null;		
+			
+		return model;		
 	}	
 	
 	
 	
 	private AndNode choose_block(OrNode _node) {
-		assert graph.containsVertex(_node);
-		
+		assert graph.vertexSet().contains(_node);
+				
 		// Given the current OR pick we find the minimum tag succesor.
 		AndNode and_pick = (AndNode) succesors(_node,graph).iterator().next();
 		int frag_size_min = frag(and_pick).vertexSet().size();
@@ -1710,6 +1814,29 @@ public class Tableaux {
 		for(DefaultEdge e : fragment.edgeSet()) {
 			model.addEdge(fragment.getEdgeSource(e), fragment.getEdgeTarget(e));
 		}
+		
+		if(insertion_point != null && root != null)
+			identify(model,insertion_point,root);
+	}
+	
+	private void identify(
+			DirectedGraph<ModelNode, DefaultEdge> g,
+			ModelNode x,
+			ModelNode y			
+	){
+
+		assert g.vertexSet().contains(x);
+		assert g.vertexSet().contains(y);
+		
+		g.addEdge(x, y);
+		if(x.equals(y)) return;
+		for(DefaultEdge e : g.incomingEdgesOf(y))
+			g.addEdge(g.getEdgeSource(e),x);
+		for(DefaultEdge e : g.outgoingEdgesOf(y))
+			g.addEdge(x,g.getEdgeTarget(e));
+		
+		g.removeVertex(y);
+		
 	}
 	
 	

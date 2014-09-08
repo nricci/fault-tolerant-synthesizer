@@ -2,6 +2,8 @@ package dctl.formulas;
 
 import java.util.Set;
 
+import util.XMLBuilder;
+
 public final class WeakUntil extends PathFormula implements BinaryExpr {
 
 	private StateFormula _left;
@@ -86,6 +88,14 @@ public final class WeakUntil extends PathFormula implements BinaryExpr {
 	@Override
 	protected boolean sat(Set<StateFormula> set) {
 		throw new Error("Inaplicable operation");
+	}
+	
+	@Override
+	public void to_xml(XMLBuilder b) {
+		b.open("weak-until");
+		_left.to_xml(b);
+		_right.to_xml(b);
+		b.close();		
 	}
 
 

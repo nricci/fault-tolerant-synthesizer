@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import util.Predicate;
+import util.XMLBuilder;
 import util.binarytree.Tree;
 
 public abstract class Formula {
@@ -39,7 +40,7 @@ public abstract class Formula {
 	
 	protected abstract boolean sat(Set<StateFormula> set);
 	
-	
+	public abstract void to_xml(XMLBuilder b);
 	
 	
 	// Static interface

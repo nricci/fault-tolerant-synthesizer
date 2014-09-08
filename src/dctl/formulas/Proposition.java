@@ -2,6 +2,8 @@ package dctl.formulas;
 
 import java.util.Set;
 
+import util.XMLBuilder;
+
 public final class Proposition extends Atom {
 
 	private String _name;
@@ -68,6 +70,10 @@ public final class Proposition extends Atom {
 		return new Negation(this);
 	}
 	
+	@Override
+	public void to_xml(XMLBuilder b) {
+		b.open_self_close("proposition", "name", this._name);		
+	}
 	
 	
 }

@@ -3,6 +3,8 @@ package dctl.formulas;
 import java.util.HashSet;
 import java.util.Set;
 
+import util.XMLBuilder;
+
 public final class Or extends PropositionalFormula implements BinaryExpr {
 
 	private StateFormula _left;
@@ -106,6 +108,15 @@ public final class Or extends PropositionalFormula implements BinaryExpr {
 	@Override
 	public StateFormula negate() {
 		return new And(_left.negate(),_right.negate());
+	}
+
+
+	@Override
+	public void to_xml(XMLBuilder b) {
+		b.open("or");
+		_left.to_xml(b);
+		_right.to_xml(b);
+		b.close();
 	}
 	
 

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
@@ -16,6 +17,7 @@ import org.jgrapht.ext.EdgeNameProvider;
 import org.jgrapht.ext.VertexNameProvider;
 import org.jgrapht.graph.DefaultEdge;
 
+import tableaux.ModelNode;
 import parser.Parser;
 import tableaux.AndNode;
 import tableaux.OrNode;
@@ -24,6 +26,7 @@ import tableaux.Tableaux;
 import tableaux.TableauxNode;
 import util.Debug;
 import util.Pair;
+import util.SetUtils;
 import util.binarytree.Tree;
 import dctl.formulas.*;
 
@@ -38,8 +41,21 @@ public class Main {
 			File out_dir = new File("output/");
 			if(!out_dir.exists())
 				out_dir.mkdir();
-			else
-				Runtime.getRuntime().exec("rm output/*");
+			
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				@Override
+	            public void run() {
+					
+					System.out.print("End of Execution. ");
+					/*try {
+						System.out.print("Calling dot2jpeg.sh...\n");
+						Runtime.getRuntime().exec("./dot2jpeg.sh");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}*/
+	            }  
+			});
+			
 			
 			
 			Specification s = Parser.parse_specification(args[0]);
@@ -54,8 +70,13 @@ public class Main {
 			//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
 			
 			int changes = 0;
-			t.do_tableau();
+			assert t.root != null;
 			
+			t.do_tableau();
+			System.out.println("tableau finished: " +  t.get_graph().vertexSet().size() + " nodes, "
+					+ t.get_graph().edgeSet().size() + " edges.");
+			
+			assert t.root != null;
 			
 			changes = 0;
 			do {
@@ -64,60 +85,46 @@ public class Main {
 				//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
 
 			} while (changes > 0);
-			
+			assert t.root != null;
 			//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
 			System.out.println("delete: " + t.delete_unreachable() + " unreachable nodes removed.");
 			System.out.println("deontic: " + t.detect_elementary_faults() + " faults detected.");
 			
-			t.commit();
-			//t.generate_non_masking_faults();
-			
-			/*int fault_count = 0;
-			do {
-				fault_count = t.inject_faults().size();
-				System.out.println("deontic: " + fault_count + " faults injected.");
-				t.do_tableau();
-			} while (fault_count > 0);*/
-			
-			t.inject_faults();
-			
-			
+			t.commit();		
 
-			//Tableaux.to_dot_with_tags("output/final_tableaux.dot", t.get_graph(), x -> true);
+			//System.out.println("MegaTest OK? : " + t.megatestII());
+			assert t.root != null;
+			Map<AndNode,AndNode> non_mask = t.inject_faults();
+			System.out.println("non-masking relation : " + non_mask.size() + " entries.");
+			//Set<Pair<AndNode,AndNode>> non_mask = t.non_masking_relation();
+			
+			
 			Debug.to_file(
-					Debug.to_dot(t.get_graph(), Debug.default_node_render), 
+					Debug.to_dot(t.get_graph(), Debug.default_node_render, SetUtils.make_set()), 
 					"output/final_tableaux.dot"
 				);
 			Debug.to_file(
-					Debug.to_dot(t.get_graph(), Debug.node_render_elem), 
-					"output/final_tableaux_elem.dot"
-				);
-			//Tableaux.to_dot_with_tags("output/final_tableaux_elem.dot", t.get_graph(), x -> x.is_elementary());
-			
-			
-			
-			
-			/*Debug.to_file(
-					Debug.to_dot(t.get_graph(), Debug.default_node_render, t.non_masking_relation()), 
-					"output/final_tableaux_nonmask.dot"
-				);
-			*/
-			//System.out.println("tableaux size " + t.get_graph().vertexSet().size());
-
-	
-			
-			
+					Debug.to_dot(t.get_graph(), Debug.node_render_min, SetUtils.make_set()), 
+					"output/final_tableaux_min.dot"
+				);	
 		
 			long end_time = System.currentTimeMillis();
 			System.out.println("total synthesis time: " +  (end_time - start_time) + " ms.");
 			System.out.println("final tableau : " +  t.get_graph().vertexSet().size() + " nodes, "
 					+ t.get_graph().edgeSet().size() + " edges.");
 			
-			//System.out.println("MegaTest : " + t.megatest());
-			System.out.println("MegaTest OK? : " + t.megatestII());
 			
-			System.out.println("calling dot2jpeg...");
-			Runtime.getRuntime().exec("./dot2jpeg.sh");
+			/*DirectedGraph<ModelNode,DefaultEdge> model = t.extract_model();
+			
+			Debug.to_file(
+					Debug.to_dot_pretty(model, Debug.model_node_render_min,non_mask), 
+					"output/ft_system.dot"
+				);
+			*/
+			
+			
+			
+			
 			
 		} catch (Exception e) {
 			e.printStackTrace();

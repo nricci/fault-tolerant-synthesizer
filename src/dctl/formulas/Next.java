@@ -2,6 +2,8 @@ package dctl.formulas;
 
 import java.util.Set;
 
+import util.XMLBuilder;
+
 public final class Next extends PathFormula implements UnaryExpr {
 
 	private StateFormula _arg;
@@ -72,6 +74,13 @@ public final class Next extends PathFormula implements UnaryExpr {
 	@Override
 	protected boolean sat(Set<StateFormula> set) {
 		throw new Error("Inaplicable operation");
+	}
+
+	@Override
+	public void to_xml(XMLBuilder b) {
+		b.open("next");
+		this._arg.to_xml(b);
+		b.close();		
 	}
 	
 

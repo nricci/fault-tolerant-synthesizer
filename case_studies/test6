@@ -1,0 +1,35 @@
+interface
+
+read;
+
+specification
+
+(bit0 && bit1 && bit2 && read) || 
+(!bit0 && !bit1 && !bit2 && !read);
+
+A(
+	G(
+		(bit0 && bit1 && bit2 && read) ||
+		(bit0 && bit1 && !bit2 && read) ||
+		(bit0 && !bit1 && bit2 && read) ||
+		(bit0 && !bit1 && !bit2 && !read) ||
+		(!bit0 && bit1 && bit2 && read) ||
+		(!bit0 && bit1 && !bit2 && !read) ||
+		(!bit0 && !bit1 && bit2 && !read) ||
+		(!bit0 && !bit1 && !bit2 && !read)
+
+	)
+);
+
+A(G(
+
+	E(X read) && E(X !read)
+
+));
+
+O(
+	G(
+		(bit0 && bit1 && bit2 && read) || 
+		(!bit0 && !bit1 && !bit2 && !read)
+	)
+);
