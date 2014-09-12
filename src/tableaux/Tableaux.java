@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -148,6 +149,21 @@ public class Tableaux {
 		return frontier(this.graph);
 	}
 	
+	private Set<TableauxNode> succesors(TableauxNode n) {
+		HashSet<TableauxNode> res = new HashSet<TableauxNode>();
+		for(DefaultEdge e : graph.outgoingEdgesOf(n))
+			res.add(graph.getEdgeTarget(e));
+		return res;
+	}
+	
+	private Set<TableauxNode> succesors(Set<TableauxNode> ns) {
+		Set<TableauxNode> empty = new HashSet<TableauxNode>();
+		BinaryOperator<Set<TableauxNode>> union = (Set<TableauxNode> x, Set<TableauxNode> y) -> union(x,y);
+		return ns.stream()
+				.map((TableauxNode x) -> succesors(x))
+				.reduce(empty,union);
+	}
+	
 	private Set<TableauxNode> succesors(TableauxNode n, DirectedGraph<TableauxNode, DefaultEdge> graph) {
 		HashSet<TableauxNode> res = new HashSet<TableauxNode>();
 		for(DefaultEdge e : graph.outgoingEdgesOf(n))
@@ -190,7 +206,7 @@ public class Tableaux {
 	 * 
 	*/
 	
-	public List<TableauxNode> do_tableau() {
+	public List<TableauxNode> do_tableau(boolean deontic_filter) {
 		List<TableauxNode> res = new LinkedList<>();
 		int step = 0;
 		while (this.frontier().stream()
@@ -198,7 +214,7 @@ public class Tableaux {
 				.findFirst()
 				.isPresent()) 
 		{
-			res.addAll(expand());
+			res.addAll(expand(deontic_filter));
 			/*Debug.to_file(
 					Debug.to_dot(this.graph, Debug.default_node_render), 
 					"output/do_tableaux"+ step++ +".dot"
@@ -208,7 +224,7 @@ public class Tableaux {
 	}
 	
 	
-	protected List<TableauxNode> expand() {
+	protected List<TableauxNode> expand(boolean deontic_filter) {
 		TableauxNode n = this.frontier()
 				.stream()
 				.filter(x -> !to_delete.contains(x))
@@ -216,7 +232,7 @@ public class Tableaux {
 		if (n instanceof AndNode)
 			return expand((AndNode) n);
 		else if (n instanceof OrNode)
-			return expand((OrNode) n);
+			return expand((OrNode) n, deontic_filter);
 		else
 			throw new Error("Found node that's neither And nor Or.");
 	}
@@ -283,7 +299,7 @@ public class Tableaux {
 	/*
 	 * 		OrNode Expansion 
 	*/
-	public List<TableauxNode> expand(OrNode n) {
+	public List<TableauxNode> expand(OrNode n, boolean deontic_filter) {
 		// Local debuging mesasges flag
 		boolean debug = false;
 		
@@ -316,27 +332,29 @@ public class Tableaux {
 		}
 
 		if(debug) System.out.println("_nodes : " + _nodes);
-		// Filtrado de nodos fallidos que sean relizables sin fallas.
-		// Las fallas son insertadas posteriormente en fault injection
-		Set<AndNode> _nodes_deontic_filter = new HashSet<AndNode>();
-		Function<AndNode,Set<Proposition>> props = ((AndNode node) -> 
-			node.formulas
-			.stream()
-			.filter(x -> x instanceof Proposition)
-			.map(x -> (Proposition) x)
-			.collect(Collectors.toSet()));
-		for(AndNode _m : _nodes) {
-			if(_m.faulty) {
-				Set<Proposition> _m_props = props.apply(_m);
-				if(!_nodes.stream().anyMatch(_m2 -> !_m2.faulty && props.apply(_m2).equals(_m_props)))
+		if(deontic_filter) {
+			// Filtrado de nodos fallidos que sean relizables sin fallas.
+			// Las fallas son insertadas posteriormente en fault injection
+			Set<AndNode> _nodes_deontic_filter = new HashSet<AndNode>();
+			Function<AndNode,Set<Proposition>> props = ((AndNode node) -> 
+				node.formulas
+				.stream()
+				.filter(x -> x instanceof Proposition)
+				.map(x -> (Proposition) x)
+				.collect(Collectors.toSet()));
+			for(AndNode _m : _nodes) {
+				if(_m.faulty) {
+					Set<Proposition> _m_props = props.apply(_m);
+					if(!_nodes.stream().anyMatch(_m2 -> !_m2.faulty && props.apply(_m2).equals(_m_props)))
+						_nodes_deontic_filter.add(_m);
+				} else {
 					_nodes_deontic_filter.add(_m);
-			} else {
-				_nodes_deontic_filter.add(_m);
+				}
 			}
+			if(debug) System.out.println(_nodes.size() - _nodes_deontic_filter.size() + " spurious faulty nodes filtered.");
+			_nodes = _nodes_deontic_filter;
+			//System.out.println("_nodes : " + _nodes);
 		}
-		if(debug) System.out.println(_nodes.size() - _nodes_deontic_filter.size() + " spurious faulty nodes filtered.");
-		_nodes = _nodes_deontic_filter;
-		//System.out.println("_nodes : " + _nodes);
 		
 		
 		// Cociente modulo formulas elementary.
@@ -799,7 +817,7 @@ public class Tableaux {
 	*/
 	
 	public Map<AndNode,AndNode> inject_faults() {
-		boolean debug = false;
+		boolean debug = true;
 		
 		// This mapping specifies all the point where a fault 
 		// can be injected. Once injected the faults should be 
@@ -817,7 +835,7 @@ public class Tableaux {
 		pending_faults = minus(detect_fault_injection_points(),injected_faults);
 		
 		int i = 0;
-		final int step = 100;
+		final int step = 15;
 		if(debug && i % step == 0)
 			Debug.to_file(
 				Debug.to_dot(this.graph, Debug.default_node_render), 
@@ -838,11 +856,14 @@ public class Tableaux {
 			
 			List<TableauxNode> faults = new LinkedList();
 			for(OrNode o : fault_generator) {
-				faults.addAll(expand(o));
+				faults.addAll(expand(o,false));
 			}
 			for(TableauxNode n : faults) {
 				AndNode fault = (AndNode) n;	
-				if(sublabeling(p.first).equals(sublabeling(fault)))
+				if(sublabeling(p.first).equals(sublabeling(fault))) 
+					// Will this be the case given that we inject by 
+					// deontically affected props ???????????????????
+					
 					// fault is directly masked
 					maskedBy.put(fault, p.first);
 				else {
@@ -850,12 +871,34 @@ public class Tableaux {
 					// or a fault comes from a previous iteration and should
 					// have its succesors generated
 					Set<AndNode> candidates = new HashSet<AndNode>();
-					for(TableauxNode n1 : succesors(p.first,graph))
+					if(!p.first.faulty)
+						candidates.add(p.first);
+					else if (maskedBy.get(p.first) != null)
+						candidates.add(maskedBy.get(p.first));
+					
+					candidates = candidates
+							.stream()
+							.map(x -> succesors(x))
+							.reduce(make_set(), SetUtils::union)
+							.stream()
+							.map(x -> succesors(x))
+							.reduce(make_set(), SetUtils::union)
+							.stream()
+							.map((TableauxNode x) -> (AndNode) x)
+							.collect(Collectors.toSet());
+							
+					candidates = candidates
+							.stream()
+							.filter(x -> sublabeling(x).equals(sublabeling(fault)))
+							.collect(Collectors.toSet());
+					
+					/*for(TableauxNode n1 : succesors(p.first,graph)) {
 						for(TableauxNode n2 : succesors(n1,graph)) {
 							assert n2 instanceof AndNode;
 							if(sublabeling(n2).equals(sublabeling(fault)))
 								candidates.add((AndNode) n2);
 						}
+					}*/
 					
 					if(!candidates.isEmpty())
 						// pick any
@@ -872,7 +915,7 @@ public class Tableaux {
 					);
 			
 			
-			do_tableau();
+			do_tableau(false);
 			if (debug && i % step == 0)
 				System.out.println("[step " + i + "] to_delete : " + to_delete);
 			
@@ -899,6 +942,7 @@ public class Tableaux {
 					+ pending_faults.size()); 
 			commit();
 		}
+		if (debug) System.out.println("non-masking faults : " + nonmasking_faults.size());
 		if (debug) System.out.println("fault-injection success."); 
 		return maskedBy;
 	}
@@ -929,6 +973,7 @@ public class Tableaux {
 		//assert n.formulas.contains(p);
 		assert p.is_literal();		
 				
+		// Collecting propositions that are deontically affected
 		Set<Proposition> deontically_affected_props = n.formulas
 				.stream()
 				.filter(x -> x instanceof DeonticProposition)
@@ -939,19 +984,8 @@ public class Tableaux {
 				.collect(Collectors.toSet());
 		
 		//System.out.println("deontically_affected_props : " + deontically_affected_props);
-				
-		Set<StateFormula> literals = n.formulas
-				.stream()
-				.filter(x -> x.is_literal())
-				.filter(x -> 
-							(x instanceof Proposition && deontically_affected_props.contains((Proposition) x)) ||
-							(x instanceof Negation && deontically_affected_props.contains(((Negation) x).arg()))
-						
-						)
-				.collect(Collectors.toSet());
-
-		//System.out.println("literals : " + literals);
 		
+		// Collecting literals that are based on a deontically affected prop
 		Set<StateFormula> next_literals = n.formulas
 				.stream()
 				.filter(x -> x.is_literal())
@@ -962,13 +996,20 @@ public class Tableaux {
 						)
 				.map(x -> x.equals(p)?x.negate():x)
 				.collect(Collectors.toSet());
-
-		//System.out.println("next_literals : " + next_literals);
 		
+		// Collecting obligations in the current state
+		Set<StateFormula> next_obligations = n.formulas
+				.stream()
+				.filter(x -> x instanceof DeonticProposition)
+				.collect(Collectors.toSet());
+		
+		
+		// This is it. Every formula to be passed on to the next node must be here.
+		Set<StateFormula> next_formulas = union(next_literals,next_obligations);
 		StateFormula next_state_descriptor = 				
 			new Exists(
 				new Next(
-						next_literals.stream()
+						next_formulas.stream()
 						.reduce(new True(), (x,y) -> new And(x,y))
 						)
 			);

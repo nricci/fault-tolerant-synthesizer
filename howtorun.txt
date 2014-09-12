@@ -1,1 +1,0 @@
-java -ea -Xss64m -cp bin:lib/* Main case_studies/test4

@@ -72,7 +72,7 @@ public class Main {
 			int changes = 0;
 			assert t.root != null;
 			
-			t.do_tableau();
+			t.do_tableau(true);
 			System.out.println("tableau finished: " +  t.get_graph().vertexSet().size() + " nodes, "
 					+ t.get_graph().edgeSet().size() + " edges.");
 			
