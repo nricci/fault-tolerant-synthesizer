@@ -1,6 +1,6 @@
 package tableaux;
 
-import static dctl.formulas.Formula.prop_sat;
+import static dctl.formulas.DCTLUtils.prop_sat;
 import static util.SetUtils.minus;
 import static util.SetUtils.pick;
 import static util.SetUtils.union;

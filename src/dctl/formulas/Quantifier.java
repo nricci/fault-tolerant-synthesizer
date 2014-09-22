@@ -53,6 +53,6 @@ public abstract class Quantifier extends StateFormula implements UnaryExpr {
 	public StateFormula negate() {
 		return new Negation(this);
 	}
-	
+
 	
 }

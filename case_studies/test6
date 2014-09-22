@@ -1,35 +1,49 @@
-interface
+--Interface
 
-read;
+r0, w0, r1, w1;
 
-specification
+--InitialState
 
-(bit0 && bit1 && bit2 && read) || 
-(!bit0 && !bit1 && !bit2 && !read);
 
-A(
-	G(
-		(bit0 && bit1 && bit2 && read) ||
-		(bit0 && bit1 && !bit2 && read) ||
-		(bit0 && !bit1 && bit2 && read) ||
-		(bit0 && !bit1 && !bit2 && !read) ||
-		(!bit0 && bit1 && bit2 && read) ||
-		(!bit0 && bit1 && !bit2 && !read) ||
-		(!bit0 && !bit1 && bit2 && !read) ||
-		(!bit0 && !bit1 && !bit2 && !read)
+((!c0 && !c1 && !c2 && w0 && write_ind) || (c0 && c1 && c2 && w1 && write_ind));
 
-	)
+--Specification
+
+OG( (c0 && c1 && c2) || (!c0 && !c1 && !c2) );
+
+OG( (r0 -> w0) || (r1 -> w1) );
+
+AG( w0 <-> !w1);
+
+AG( A(w0 U w1));
+
+AG ( A(w1 U w0) );
+
+AG( r1 <-> ( (c0 && c1 ) || (c0 && c2) || (c1 && c2) ) );
+
+AG( r0 <-> ( (!c0 && !c1) || (!c0 && !c2) || (!c1 && !c2)) );
+
+AG( write_one -> AX(  (w1 && write_ind && c0 && c1 && c2)) );
+
+AG( write_zero -> AX(  ( w0 && write_ind && !c0 && !c1 && !c2)));
+
+
+
+
+AG ( (w0 && write_ind && !c0 && !c1 && !c2) -> AX( (!c0 && !c1 && !c2 && w0 && write_zero) ||  
+						    (!c0 && !c1 && !c2 && w0 && write_one) || 
+						    (w0 && write_ind && !c0 && !c1 && !c2)) );
+
+AG( 
+    (w1 && write_ind && c0 && c1 && c2) -> 
+    AX( 
+        (w1 && write_zero && c0 && c1 && c2) || 
+        (w1 && write_one && c0 && c1 && c2) || 
+	(w1 && write_ind && c0 && c1 && c2)
+    ) 
 );
 
-A(G(
 
-	E(X read) && E(X !read)
 
-));
 
-O(
-	G(
-		(bit0 && bit1 && bit2 && read) || 
-		(!bit0 && !bit1 && !bit2 && !read)
-	)
-);
+

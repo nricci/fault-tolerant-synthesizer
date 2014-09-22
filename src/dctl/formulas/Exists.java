@@ -33,7 +33,7 @@ public final class Exists extends Quantifier {
 			Set<StateFormula> deco = new HashSet<StateFormula>();
 			deco.add(((Globally) _arg).arg());
 			StateFormula p = new Exists(new Next(this));
-			p = new And(((Globally) _arg).arg(),p);
+			//p = new And(((Globally) _arg).arg(),p);
 			deco.add(p);
 			return deco;
 		} 

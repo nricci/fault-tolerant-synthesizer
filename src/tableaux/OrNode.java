@@ -9,7 +9,7 @@ import dctl.formulas.True;
 import util.*;
 import static util.SetUtils.*;
 import util.binarytree.Tree;
-import static dctl.formulas.Formula.closure;
+import static dctl.formulas.DCTLUtils.closure;
 
 public class OrNode extends TableauxNode {
 

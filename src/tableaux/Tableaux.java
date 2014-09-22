@@ -31,10 +31,10 @@ import util.Pair;
 import util.SetUtils;
 import util.binarytree.Tree;
 import dctl.formulas.*;
-import static dctl.formulas.Formula.closure;
-import static dctl.formulas.Formula.is_consistent;
-import static dctl.formulas.Formula.is_closed;
-import static dctl.formulas.Formula.prop_sat;
+import static dctl.formulas.DCTLUtils.closure;
+import static dctl.formulas.DCTLUtils.is_consistent;
+import static dctl.formulas.DCTLUtils.is_closed;
+import static dctl.formulas.DCTLUtils.prop_sat;
 import static util.SetUtils.map;
 import static util.SetUtils.minus;
 import static util.SetUtils.union;
@@ -215,6 +215,7 @@ public class Tableaux {
 				.isPresent()) 
 		{
 			res.addAll(expand(deontic_filter));
+			//System.out.println("expand " + step++);
 			/*Debug.to_file(
 					Debug.to_dot(this.graph, Debug.default_node_render), 
 					"output/do_tableaux"+ step++ +".dot"
@@ -222,7 +223,6 @@ public class Tableaux {
 		}
 		return res;
 	}
-	
 	
 	protected List<TableauxNode> expand(boolean deontic_filter) {
 		TableauxNode n = this.frontier()

@@ -42,3 +42,6 @@ output/*
 .jpeg
 *.pyc
 
+/nbproject/private/
+/build/
+/dist/
