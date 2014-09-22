@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.Graph;
@@ -29,6 +30,7 @@ import util.Pair;
 import util.SetUtils;
 import util.binarytree.Tree;
 import dctl.formulas.*;
+import static util.SetUtils.union;;
 
 public class Main {
 	
@@ -94,8 +96,11 @@ public class Main {
 
 			//System.out.println("MegaTest OK? : " + t.megatestII());
 			assert t.root != null;
-			Map<AndNode,AndNode> non_mask = t.inject_faults();
-			System.out.println("non-masking relation : " + non_mask.size() + " entries.");
+			System.out.print("[fault-injection] ... ");
+			t.inject_faults();
+			System.out.println("done.");
+			System.out.println("masking relation : " + t.masking_relation);
+			System.out.println("non-masked faults : " + t.nonmasking_faults);
 			//Set<Pair<AndNode,AndNode>> non_mask = t.non_masking_relation();
 			
 			
@@ -114,13 +119,16 @@ public class Main {
 					+ t.get_graph().edgeSet().size() + " edges.");
 			
 			
-			/*DirectedGraph<ModelNode,DefaultEdge> model = t.extract_model();
+			DirectedGraph<ModelNode,DefaultEdge> model = t.extract_model();
+			
+			
+			//assert union(t.masking_relation.keySet(),t.nonmasking_faults).equals(t.get_graph().vertexSet().stream().filter(x -> x instanceof AndNode).collect(Collectors.toSet()));
 			
 			Debug.to_file(
-					Debug.to_dot_pretty(model, Debug.model_node_render_min,non_mask), 
-					"output/ft_system.dot"
+					Debug.model_to_dot(model,t.masking_relation), 
+					"output/model.dot"
 				);
-			*/
+			
 			
 			
 			

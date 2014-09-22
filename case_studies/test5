@@ -1,6 +1,29 @@
-ok1;
-ok2;
+--Interface
 
-O(G ok1);
-O(G ok2);
+r;
+
+--InitialState
+
+(c0 && c1 && c2) || (!c0 && !c1 && !c2) && !w_ind;
+
+--Specification
+
+OG((c0 && c1 && c2) || (!c0 && !c1 && !c2));
+
+AG(
+	(c0 || !c0) &&
+	(c1 || !c1) &&
+	(c2 || !c2)
+);
+
+EF (c0 && c1 && c2);
+EF (!c0 && !c1 && !c2);
+
+AG(r <-> (c0 && c1) || (c1 && c2) || (c0 && c2));
+
+AG(!r <-> (!c0 && !c1) || (!c1 && !c2) || (!c0 && !c2));
+
+
+
+
 
