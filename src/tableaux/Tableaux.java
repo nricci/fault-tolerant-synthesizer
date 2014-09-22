@@ -146,7 +146,15 @@ public class Tableaux {
 	}
 	
 	public Set<TableauxNode> frontier() {
-		return frontier(this.graph);
+		HashSet<TableauxNode> res = new HashSet<TableauxNode>();
+		//System.out.println("hashes : " + graph.vertexSet().stream().map(x -> x.hashCode()));
+		for(TableauxNode n : graph.vertexSet()) {
+			//System.out.println("n hash : " + n.hashCode());
+			//assert graph.containsVertex(n);
+			if(graph.outgoingEdgesOf(n).isEmpty()) 
+				res.add(n);
+		}
+		return res;
 	}
 	
 	private Set<TableauxNode> succesors(TableauxNode n) {
@@ -215,11 +223,12 @@ public class Tableaux {
 				.isPresent()) 
 		{
 			res.addAll(expand(deontic_filter));
-			//System.out.println("expand " + step++);
+			System.out.println("[do_tableau] step : " + step++);
 			/*Debug.to_file(
 					Debug.to_dot(this.graph, Debug.default_node_render), 
 					"output/do_tableaux"+ step++ +".dot"
 				);*/
+			
 		}
 		return res;
 	}
@@ -816,8 +825,11 @@ public class Tableaux {
 	 * ******************************************* 
 	*/
 	
+	public Map<AndNode,AndNode> masking_relation;
+	public Set<AndNode> nonmasking_faults;
+	
 	public Map<AndNode,AndNode> inject_faults() {
-		boolean debug = true;
+		boolean debug = false;
 		
 		// This mapping specifies all the point where a fault 
 		// can be injected. Once injected the faults should be 
@@ -831,6 +843,9 @@ public class Tableaux {
 		// Masking Relation
 		Map<AndNode,AndNode> maskedBy = new HashMap<AndNode, AndNode>();
 		Set<AndNode> nonmasking_faults = new HashSet<AndNode>();
+		for(AndNode n : normal_nodes()) {
+			maskedBy.put(n, n);
+		}
 		
 		pending_faults = minus(detect_fault_injection_points(),injected_faults);
 		
@@ -860,52 +875,46 @@ public class Tableaux {
 			}
 			for(TableauxNode n : faults) {
 				AndNode fault = (AndNode) n;	
-				if(sublabeling(p.first).equals(sublabeling(fault))) 
-					// Will this be the case given that we inject by 
-					// deontically affected props ???????????????????
-					
-					// fault is directly masked
-					maskedBy.put(fault, p.first);
-				else {
-					// Note that the injection point whether is a Norm node
-					// or a fault comes from a previous iteration and should
-					// have its succesors generated
-					Set<AndNode> candidates = new HashSet<AndNode>();
-					if(!p.first.faulty)
-						candidates.add(p.first);
-					else if (maskedBy.get(p.first) != null)
-						candidates.add(maskedBy.get(p.first));
-					
-					candidates = candidates
-							.stream()
-							.map(x -> succesors(x))
-							.reduce(make_set(), SetUtils::union)
+				
+				AndNode injection_point = p.first;
+				AndNode i_mask = maskedBy.get(injection_point);
+				if (i_mask == null)
+					nonmasking_faults.add(fault);
+					// Add EF(reach_somesucc), don't think its nessesary
+				else {	
+					Set<AndNode> candidates = succesors(i_mask)
 							.stream()
 							.map(x -> succesors(x))
 							.reduce(make_set(), SetUtils::union)
 							.stream()
 							.map((TableauxNode x) -> (AndNode) x)
 							.collect(Collectors.toSet());
-							
-					candidates = candidates
+					Optional<AndNode> mask = candidates
 							.stream()
-							.filter(x -> sublabeling(x).equals(sublabeling(fault)))
-							.collect(Collectors.toSet());
-					
-					/*for(TableauxNode n1 : succesors(p.first,graph)) {
-						for(TableauxNode n2 : succesors(n1,graph)) {
-							assert n2 instanceof AndNode;
-							if(sublabeling(n2).equals(sublabeling(fault)))
-								candidates.add((AndNode) n2);
-						}
-					}*/
-					
-					if(!candidates.isEmpty())
-						// pick any
-						maskedBy.put(fault, candidates.iterator().next());
-					else
-						nonmasking_faults.add(fault);					
-				}		
+							.filter(x -> sublabeling(x).equals(sublabeling(n)))
+							.findAny();
+					if(mask.isPresent()) {
+						maskedBy.put(fault, mask.get());
+					} else {
+						// Can't just add formulas to the node. It will change the hash
+						// And throw graph library off.
+						// WORKAROUND
+						Set<StateFormula> forms = union(
+								fault.formulas,
+								recovery_formula(candidates.stream().map(x -> x.formulas).collect(Collectors.toSet()))
+								);
+						AndNode new_node = new AndNode(forms);
+						graph.addVertex(new_node);
+						for(TableauxNode pre : predecesors(fault, graph)) graph.addEdge(pre, new_node);
+						for(TableauxNode post : succesors(fault, graph)) graph.addEdge(new_node, post);
+						graph.removeVertex(fault);
+						nonmasking_faults.add(new_node);
+						assert(new_node.formulas.equals(forms));
+					}
+						
+						
+				}
+				
 			}			
 			if(debug && i % step == 0)
 				System.out.println("[step " + i + "] injected faults : " + faults);
@@ -944,7 +953,25 @@ public class Tableaux {
 		}
 		if (debug) System.out.println("non-masking faults : " + nonmasking_faults.size());
 		if (debug) System.out.println("fault-injection success."); 
+		
+		this.masking_relation = maskedBy;
+		this.nonmasking_faults = nonmasking_faults;
+		
 		return maskedBy;
+	}
+	
+	
+	private StateFormula recovery_formula(Set<Set<StateFormula>> sets) {
+		StateFormula res = new False();
+		for(Set<StateFormula> s : sets) {
+			StateFormula clause = s
+					.stream()
+					.filter(x -> x instanceof Proposition)
+					.reduce(new False(), (x,y) -> new And(x,y));
+			res = new Or(res, clause);
+		}
+		res = new Exists(new Next(res));
+		return res;
 	}
 		
 		
@@ -1100,7 +1127,7 @@ public class Tableaux {
 	
 	}
 	
-	public Set<Pair<AndNode,AndNode>> non_masking_relation() {
+	public Set<Pair<AndNode,AndNode>> calc_non_masking_relation() {
 		return non_masking_relation_dull();
 	}
 	

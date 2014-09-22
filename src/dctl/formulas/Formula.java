@@ -42,5 +42,5 @@ public abstract class Formula {
 	
 	public abstract void to_xml(XMLBuilder b);
 	
-	
+
 }

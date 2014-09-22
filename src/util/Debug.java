@@ -3,6 +3,8 @@ package util;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -132,11 +134,9 @@ public class Debug {
 	}
 	
 	
-	public static String to_dot_pretty(
+	public static String model_to_dot(
 			DirectedGraph<ModelNode, DefaultEdge> g,
-			Function<ModelNode, String> node_renderer,
-			Set<Pair<AndNode,AndNode>> nonmask
-			
+			Map<AndNode,AndNode> mask	
 	) {
 		String res = "";	
 		res += "digraph {\n";
@@ -146,17 +146,18 @@ public class Debug {
 		
 		for(ModelNode n : g.vertexSet()) {
 			map.put(n, "n"+i);
-			res += "n"+ i + 
-					"[shape=box,style=filled" +
-					//(n.faulty?",style=dotted,filled":",style=filled") +
-					(!n.faulty?",color=darkgreen,fillcolor=green":"") +
-					(n.faulty?(
-						nonmask.stream().filter(x -> x.second.equals(n.copyOf)).findAny().isPresent()?
-								// If it's masked
-								",color=gold,fillcolor=gold":
-								// If it's not masked	
-								",color=red,fillcolor=red"							
-							):"") +				
+			
+			// Rendering node
+			res += "n"+i;
+			res += "[shape=box" +
+					(!n.faulty?
+							",style=filled,color=green"
+							:
+							mask.get(n.copyOf)!=null?
+									",style=filled,color=yellow"
+									:
+									",style=filled,color=red"	
+					) +
 					",label=\"" + n.toString() + "\n" +
 					n.formulas
 					.stream()
@@ -165,19 +166,24 @@ public class Debug {
 					.map(x -> x.toString() + "\n")
 					.sorted((String x, String y) -> y.length() - x.length())
 					.reduce("",String::concat) 
-					+ "\"];" 
-					+ "\n";
+					+ "\"];";
+			res += "\n";
+						
 			i++;
 		}
 		res += "\n";
 		for(DefaultEdge e : g.edgeSet()) {
 			res += map.get(g.getEdgeSource(e)) + "->" + map.get(g.getEdgeTarget(e)) + ";\n";
 		}
-		
+		//for(Entry<AndNode,AndNode> p : mask.entrySet()) {
+		//	res += map.get(p.getKey()) + "->" + map.get(p.getValue()) + "[style=dotted,color=red];\n";
+		//}
 		
 		res += "}";		
 		return res;
-	}
+	}	
+	
+	
 	
 	
 	
