@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import util.Gauge;
 import util.Predicate;
 import util.XMLBuilder;
 import util.binarytree.Tree;
@@ -79,23 +80,25 @@ public abstract class Formula {
 	
 	
 	@SuppressWarnings("unchecked")
-	public static Set<Set<StateFormula>> closure(Set<StateFormula> set) {
+	public static Set<Set<StateFormula>> closure(Set<StateFormula> set) {		
+		//System.out.print("*");
 		//System.out.println("closure_runnerup");
 		//System.out.println(set);
 		
 		assert(set != null);
 		
 		if(!is_consistent(set)) {
-			//System.out.println("Prune!!!");
+			//System.out.print("P");
 			return new HashSet<>();
 		}
 		
 		Optional<StateFormula> op = set.stream().filter(x -> !x.is_elementary()).findAny();
 		StateFormula f = op.isPresent()?op.get():null;
 		//System.out.println(f);
-		if (f == null) 
+		if (f == null) {
+			//System.out.print(".");
 			return make_set(set);
-		else if (f.is_alpha()) {
+		} else if (f.is_alpha()) {
 			Set<StateFormula> temp = union(minus(set,f),f.get_decomposition());
 					
 			Set<Set<StateFormula>> recursion_res = closure(temp);
