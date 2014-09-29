@@ -829,7 +829,7 @@ public class Tableaux {
 	public Set<AndNode> nonmasking_faults;
 	
 	public Map<AndNode,AndNode> inject_faults() {
-		boolean debug = false;
+		boolean debug = true;
 		
 		// This mapping specifies all the point where a fault 
 		// can be injected. Once injected the faults should be 
@@ -1712,8 +1712,6 @@ public class Tableaux {
 		
 		// Constructing Fragment
 		DirectedGraph<ModelNode, DefaultEdge> res = new DefaultDirectedGraph<ModelNode, DefaultEdge>(DefaultEdge.class);
-
-		
 		if(!eventuality_formulas.isEmpty())	{
 			DirectedGraph<TableauxNode, DefaultEdge> current_dag;
 			Quantifier f = eventuality_formulas.poll();
@@ -1735,6 +1733,8 @@ public class Tableaux {
 			ModelNode frag_root = new ModelNode(n);
 			res.addVertex(frag_root);
 			for(TableauxNode o : succesors(n, graph)) {
+				assert graph.vertexSet().contains(o);
+				System.out.println("Node : " + o);
 				ModelNode new_node = new ModelNode(succesors(o,graph).stream().findAny().get());
 				res.addVertex(new_node);
 				res.addEdge(frag_root, new_node);
