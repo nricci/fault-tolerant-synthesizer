@@ -30,7 +30,8 @@ import util.Pair;
 import util.SetUtils;
 import util.binarytree.Tree;
 import dctl.formulas.*;
-import static util.SetUtils.union;;
+import static util.SetUtils.union;
+import static util.SetUtils.intersection;
 
 public class Main {
 	
@@ -103,6 +104,11 @@ public class Main {
 			System.out.println("non-masked faults : " + t.nonmasking_faults);
 			//Set<Pair<AndNode,AndNode>> non_mask = t.non_masking_relation();
 			
+			if (!intersection(t.masking_relation.keySet(),t.nonmasking_faults).isEmpty()) {
+				System.out.println("It pet : " + intersection(t.masking_relation.keySet(),t.nonmasking_faults));
+				assert false;
+			}
+				
 			
 			Debug.to_file(
 					Debug.to_dot(t.get_graph(), Debug.default_node_render, SetUtils.make_set()), 
@@ -112,22 +118,32 @@ public class Main {
 					Debug.to_dot(t.get_graph(), Debug.node_render_min, SetUtils.make_set()), 
 					"output/final_tableaux_min.dot"
 				);	
-		
+			/*Debug.to_file(
+					Debug.to_mega_dot(
+							t.get_graph(), 
+							Debug.node_render_min,
+							t.masking_relation,
+							t.nonmasking_faults
+							), 
+					"output/mega_tableaux.dot"
+				);
+			
+		*/
 			long end_time = System.currentTimeMillis();
 			System.out.println("total synthesis time: " +  (end_time - start_time) + " ms.");
 			System.out.println("final tableau : " +  t.get_graph().vertexSet().size() + " nodes, "
 					+ t.get_graph().edgeSet().size() + " edges.");
 			
 			
-			DirectedGraph<ModelNode,DefaultEdge> model = t.extract_model();
+			//DirectedGraph<ModelNode,DefaultEdge> model = t.extract_model();
 			
 			
 			//assert union(t.masking_relation.keySet(),t.nonmasking_faults).equals(t.get_graph().vertexSet().stream().filter(x -> x instanceof AndNode).collect(Collectors.toSet()));
 			
-			Debug.to_file(
-					Debug.model_to_dot(model,t.masking_relation), 
-					"output/model.dot"
-				);
+			//Debug.to_file(
+			//		Debug.model_to_dot(model,t.masking_relation), 
+			//		"output/model.dot"
+			//	);
 			
 			
 			

@@ -223,7 +223,7 @@ public class Tableaux {
 				.isPresent()) 
 		{
 			res.addAll(expand(deontic_filter));
-			System.out.println("[do_tableau] step : " + step++);
+			//System.out.println("[do_tableau] step : " + step++);
 			/*Debug.to_file(
 					Debug.to_dot(this.graph, Debug.default_node_render), 
 					"output/do_tableaux"+ step++ +".dot"
@@ -850,7 +850,7 @@ public class Tableaux {
 		pending_faults = minus(detect_fault_injection_points(),injected_faults);
 		
 		int i = 0;
-		final int step = 15;
+		final int step = 1;
 		if(debug && i % step == 0)
 			Debug.to_file(
 				Debug.to_dot(this.graph, Debug.default_node_render), 
@@ -922,6 +922,12 @@ public class Tableaux {
 				faults.stream().forEach(x -> 
 					System.out.println("\t " + x + " is masked by " + maskedBy.get(x))				
 					);
+
+			for (AndNode a : nonmasking_faults)
+				assert graph.vertexSet().contains(a);
+				
+			if (debug && i % step == 0)
+				System.out.println("[step " + i + "] non_masking_faults : " + nonmasking_faults);
 			
 			
 			do_tableau(false);
@@ -950,6 +956,17 @@ public class Tableaux {
 				System.out.println("[step " + i + "] new pending faults : " 
 					+ pending_faults.size()); 
 			commit();
+			
+			if (!intersection(maskedBy.keySet(),nonmasking_faults).isEmpty()) {
+				System.out.println("It pet : " + 
+						intersection(maskedBy.keySet(),nonmasking_faults)
+						.stream()
+						.map(x -> get_node(x))
+						.collect(Collectors.toSet())
+						);
+				assert false;
+			}
+			
 		}
 		if (debug) System.out.println("non-masking faults : " + nonmasking_faults.size());
 		if (debug) System.out.println("fault-injection success."); 
@@ -958,6 +975,18 @@ public class Tableaux {
 		this.nonmasking_faults = nonmasking_faults;
 		
 		return maskedBy;
+	}
+	
+	/* AUXILIARY METHOD - REMOVE!!! */
+	public AndNode get_node(AndNode n) {
+		AndNode res = null;
+		for(TableauxNode _n : graph.vertexSet()) {
+			if (_n.equals(n)) {
+				res = (AndNode) _n;
+				break;		
+			}
+		}
+		return res;
 	}
 	
 	
