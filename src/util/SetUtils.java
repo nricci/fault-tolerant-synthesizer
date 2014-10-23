@@ -85,7 +85,10 @@ public final class SetUtils {
 	}
 	
 	public static <E> boolean all(Set<E> set, Predicate<E> prop) {
-		return !some(set,prop);
+		for(E _elem : set)
+			if(!prop.eval(_elem))
+				return false;
+		return true;
 	}
 	
 	public static <E> Set<E> filter(Set<E> set, Predicate<E> prop) {

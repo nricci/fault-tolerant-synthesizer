@@ -18,6 +18,11 @@ import org.jgrapht.ext.EdgeNameProvider;
 import org.jgrapht.ext.VertexNameProvider;
 import org.jgrapht.graph.DefaultEdge;
 
+import com.sun.corba.se.spi.ior.MakeImmutable;
+
+import synthesizer.FaultInjector;
+import synthesizer.FaultInjectorII;
+import synthesizer.NonMaskingCalculator;
 import tableaux.ModelNode;
 import parser.Parser;
 import tableaux.AndNode;
@@ -27,6 +32,7 @@ import tableaux.Tableaux;
 import tableaux.TableauxNode;
 import util.Debug;
 import util.Pair;
+import util.Relation;
 import util.SetUtils;
 import util.binarytree.Tree;
 import dctl.formulas.*;
@@ -93,22 +99,50 @@ public class Main {
 			System.out.println("delete: " + t.delete_unreachable() + " unreachable nodes removed.");
 			System.out.println("deontic: " + t.detect_elementary_faults() + " faults detected.");
 			
+			
+			System.out.println("tableau after delete: " +  t.get_graph().vertexSet().size() + " nodes, "
+					+ t.get_graph().edgeSet().size() + " edges.");
 			t.commit();		
 
-			//System.out.println("MegaTest OK? : " + t.megatestII());
+			
 			assert t.root != null;
+			
+			// ALTERNATIVAS PARA FALLAS
+			
+			
+			System.out.print("[fault-injection] ... ");
+			Relation<AndNode,AndNode> rel = new FaultInjectorII(t).inject_faults();
+			System.out.println("done.");
+			System.out.print("[non-masking relation] ... ");
+			//Relation<AndNode,AndNode> rel =  new NonMaskingCalculator(t).compute();
+			System.out.println("done.");
+			
+			for(TableauxNode n : t.get_graph().vertexSet()) {
+				if (n instanceof AndNode && n.faulty) {
+					Set<?> set = rel
+							.stream()
+							.filter(p -> p.first.equals(n))
+							.map(p -> p.second)
+							.filter(x -> !x.faulty)
+							.collect(Collectors.toSet());
+					if(set.isEmpty())
+						System.out.println("Untollerated Fault : " + n);
+				}
+			}
+			
+			/*
 			System.out.print("[fault-injection] ... ");
 			t.inject_faults();
 			System.out.println("done.");
-			System.out.println("masking relation : " + t.masking_relation);
-			System.out.println("non-masked faults : " + t.nonmasking_faults);
-			//Set<Pair<AndNode,AndNode>> non_mask = t.non_masking_relation();
+			System.out.print("[non-masking relation] ... ");
+			Relation<AndNode,AndNode> rel =  new Relation(t.masking_relation);
+			System.out.println("Untollerated Fault : " + t.nonmasking_faults);
+			System.out.println("done.");		
+			*/
 			
-			if (!intersection(t.masking_relation.keySet(),t.nonmasking_faults).isEmpty()) {
-				System.out.println("It pet : " + intersection(t.masking_relation.keySet(),t.nonmasking_faults));
-				assert false;
-			}
-				
+			t.to_dot("output/tableaux_nmask.dot", Debug.node_render_min, rel);
+			
+			
 			
 			Debug.to_file(
 					Debug.to_dot(t.get_graph(), Debug.default_node_render, SetUtils.make_set()), 
@@ -118,6 +152,10 @@ public class Main {
 					Debug.to_dot(t.get_graph(), Debug.node_render_min, SetUtils.make_set()), 
 					"output/final_tableaux_min.dot"
 				);	
+			Debug.to_file(
+					Debug.to_dot(t.extract_AND_induced_graph(t.get_graph()), Debug.node_render_min, rel), 
+					"output/collapsed_tableaux_min.dot"
+				);
 			/*Debug.to_file(
 					Debug.to_mega_dot(
 							t.get_graph(), 

@@ -26,8 +26,10 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.Subgraph;
 
+import synthesizer.MaskingCalculator;
 import util.Debug;
 import util.Pair;
+import util.Relation;
 import util.SetUtils;
 import util.binarytree.Tree;
 import dctl.formulas.*;
@@ -143,6 +145,27 @@ public class Tableaux {
 	
 	public DirectedGraph<TableauxNode, DefaultEdge> get_graph() {
 		return this.graph;
+	}
+	
+	public Set<AndNode> and_nodes() {
+		return this
+				.graph
+				.vertexSet()
+				.stream()
+				.filter(n -> n instanceof AndNode)
+				.map(n -> (AndNode) n)
+				.collect(Collectors.toSet());
+	}
+	
+	
+	public TableauxNode add_node(TableauxNode n) {
+		if(!graph.addVertex(n))
+			return graph.vertexSet().stream().filter(x -> x.equals(n)).findFirst().get();
+		return n;
+	}
+	
+	public void add_edge(TableauxNode x, TableauxNode y) {
+		graph.addEdge(x, y);
 	}
 	
 	public Set<TableauxNode> frontier() {
@@ -480,7 +503,7 @@ public class Tableaux {
 		count += delete_neighbours();
 		
 		//System.out.println(to_check);
-		//System.out.println(to_delete);
+		System.out.println(to_delete);
 		
 		for(TableauxNode n : to_delete) {
 			graph.removeVertex(n);
@@ -841,6 +864,9 @@ public class Tableaux {
 		Set<Pair<AndNode,DeonticProposition>> injected_faults = new HashSet<>();
 
 		// Masking Relation
+		to_dot("output/tableaux_mask.dot", Debug.node_render_min,
+				new MaskingCalculator(this).compute());
+		
 		Map<AndNode,AndNode> maskedBy = new HashMap<AndNode, AndNode>();
 		Set<AndNode> nonmasking_faults = new HashSet<AndNode>();
 		for(AndNode n : normal_nodes()) {
@@ -956,6 +982,14 @@ public class Tableaux {
 				System.out.println("[step " + i + "] new pending faults : " 
 					+ pending_faults.size()); 
 			commit();
+			
+			
+			// Remove untolerated faults
+			
+			//for(AndNode f : intersection(maskedBy.keySet(),nonmasking_faults)) {
+				//maskedby
+			//}
+			
 			
 			if (!intersection(maskedBy.keySet(),nonmasking_faults).isEmpty()) {
 				System.out.println("It pet : " + 
@@ -1098,45 +1132,6 @@ public class Tableaux {
 	
 	
 	
-	public Set<AndNode> inject_fault() {
-		LinkedList<TableauxNode> workset = new LinkedList<TableauxNode>(graph.vertexSet());
-		Set<AndNode> res = new HashSet<AndNode>();
-		while(!workset.isEmpty()) {
-			TableauxNode n = workset.pop();
-			if(n instanceof AndNode) {
-				// If we have an AND-Node with obligations to violate.
-				
-				// We check what propositional variables (if any) must 
-				// be negated to violate some obligation.
-				Set<DeonticProposition> obligations = new HashSet<DeonticProposition>();
-				for(StateFormula f : n.formulas) {
-					if(f instanceof DeonticProposition)
-						if(prop_sat(n.formulas,((DeonticProposition) f).get_prop()))
-							obligations.add((DeonticProposition) f);
-				}	
-				
-				if(!obligations.isEmpty()) {
-					OrNode fault = new OrNode(n.formulas);
-					fault.faulty = true;
-					graph.addVertex(fault);
-					graph.addEdge(n, fault);
-
-					for(DeonticProposition ob : obligations) {
-						if(!injected_faults.contains(new Pair<AndNode,DeonticProposition>((AndNode) n,ob))) {
-							AndNode _fault = new AndNode(union(minus(fault.formulas, ob.get_prop()),ob.get_prop().negate()));
-							_fault.faulty = true;
-							graph.addVertex(_fault);
-							graph.addEdge(fault, _fault);
-							frontier.add(_fault);	
-							res.add(_fault);
-							injected_faults.add(new Pair<AndNode,DeonticProposition>((AndNode) n,ob));
-						}
-					}				
-				}
-			}		
-		}		
-		return res;
-	}
 	
 
 	/* *******************************************
@@ -1351,6 +1346,17 @@ public class Tableaux {
 				.collect(Collectors.toSet());
 	}
 	
+	public Set<AndNode> postF(AndNode n) {
+		return succesors(n, graph)
+				.stream()
+				.map(x -> succesors(x,graph))
+				.reduce(SetUtils.make_set(),SetUtils::union)
+				.stream()
+				.filter(x -> x.faulty)
+				.map(x -> (AndNode) x)
+				.collect(Collectors.toSet());
+	}
+	
 	public Set<AndNode> preN(Set<AndNode> nodes) {
 		return nodes
 				.stream()
@@ -1380,6 +1386,16 @@ public class Tableaux {
 					);
 		} while(!res.equals(res_old));		
 		
+		return res;
+	}
+	
+	public Relation<AndNode,AndNode> transitive_succ() {
+		DirectedGraph<TableauxNode, DefaultEdge> colapsed_graph = this.extract_AND_induced_graph(graph);
+		Relation<AndNode,AndNode> res = new Relation<>();
+		for(DefaultEdge e : colapsed_graph.edgeSet()) {
+			res.add(new Pair((AndNode) colapsed_graph.getEdgeSource(e),(AndNode) colapsed_graph.getEdgeTarget(e)));
+		}
+		Relation.closure(res);
 		return res;
 	}
 	
@@ -1577,7 +1593,7 @@ public class Tableaux {
 		return tag;
 	}
 	
-	private DirectedGraph<TableauxNode, DefaultEdge> extract_AND_induced_graph(DirectedGraph<TableauxNode, DefaultEdge> g) {
+	public DirectedGraph<TableauxNode, DefaultEdge> extract_AND_induced_graph(DirectedGraph<TableauxNode, DefaultEdge> g) {
 		LinkedList<TableauxNode> to_delete = new LinkedList<TableauxNode>();
 		for(TableauxNode n : g.vertexSet())
 			if(n instanceof OrNode) {
@@ -1944,204 +1960,49 @@ public class Tableaux {
 	 * ******************************************* 
 	*/
 
-	
-	
-	public static String to_dot(String file, DirectedGraph<TableauxNode, DefaultEdge> g) {
-		String res = "";
-		
+	public void to_dot(
+				String path,
+				Function<TableauxNode,String> node_renderer,
+				Relation<AndNode,AndNode> nmask
+			) 
+	{
+		String res = "";	
 		res += "digraph {\n";
+		
 		int i = 0;
 		HashMap<TableauxNode,String> map = new HashMap<TableauxNode, String>();
-		for(TableauxNode n : g.vertexSet()) {
+		
+		for(TableauxNode n : graph.vertexSet()) {
 			map.put(n, "n"+i);
-			res += "n" + i++ + " [shape=" + ((n instanceof AndNode)?"box":"hexagon") + ",label=\"";
-			for(StateFormula f : n.formulas) {
-				res += f + "\n";
-			}
-			res += "\"];";
+			res += "n"+i + node_renderer.apply(n) + "\n";
+			i++;
 		}
 		res += "\n";
-		for(DefaultEdge e : g.edgeSet()) {
-			res += map.get(g.getEdgeSource(e)) + "->" + map.get(g.getEdgeTarget(e)) + ";\n";
-		}
-		res += "}";
-		
-		if(file != null) {
-			try {
-				FileWriter w = new FileWriter(new File(file));
-				w.write(res);
-				w.close();
-			} catch (Exception e) {
-				System.out.println("Tableaux.to_dot: could not write to file.");
-				e.printStackTrace();
-			}
+		for(DefaultEdge e : graph.edgeSet()) {
+			res += map.get(graph.getEdgeSource(e)) + "->" + map.get(graph.getEdgeTarget(e)) + ";\n";
 		}
 		
-		return res;
+		for(Pair<AndNode,AndNode> p : nmask) {
+			res += map.get(p.first) + "->" + map.get(p.second) + " [color=red];\n";
+		}
+		
+		res += "}";		
+		to_file(res, path);
 	}
 	
-	public static String frag_to_dot(String file, DirectedGraph<ModelNode, DefaultEdge> g) {
-		String res = "";
-		
-		res += "digraph {\n";
-		int i = 0;
-		HashMap<ModelNode,String> map = new HashMap<ModelNode, String>();
-		for(ModelNode n : g.vertexSet()) {
-			map.put(n, "n"+i);
-			res += "n" + i++ + " [shape=box,label=\"";
-			for(StateFormula f : n.formulas) {
-				res += f + "\n";
-			}
-			res += "\"];";
-		}
-		res += "\n";
-		for(DefaultEdge e : g.edgeSet()) {
-			res += map.get(g.getEdgeSource(e)) + "->" + map.get(g.getEdgeTarget(e)) + ";\n";
-		}
-		res += "}";
-		
-		if(file != null) {
+	private void to_file(String content, String path) {
+		if(path != null) {
 			try {
-				FileWriter w = new FileWriter(new File(file));
-				w.write(res);
+				FileWriter w = new FileWriter(new File(path));
+				w.write(content);
 				w.close();
 			} catch (Exception e) {
-				System.out.println("Tableaux.to_dot: could not write to file.");
+				System.out.println("Could not write to file.");
 				e.printStackTrace();
 			}
 		}
-		
-		return res;
 	}
 	
 	
-	
-	public static String to_dot_with_tags(
-			String file, 
-			DirectedGraph<TableauxNode, DefaultEdge> g, 
-			//Map<TableauxNode,String> tags,
-			Predicate<StateFormula> criteria			
-	) {
-		String res = "";
-		
-		res += "digraph {\n";
-		int i = 0;
-		HashMap<TableauxNode,String> map = new HashMap<TableauxNode, String>();
-		for(TableauxNode n : g.vertexSet()) {
-			map.put(n, "n"+i);
-			res += "n" + i++ + " [shape=" + ((n instanceof AndNode)?"box":"circle");
-			res += (n.faulty?",style=dotted":"");
-			res += ",label=\"";
-			//res += "tag : " + tags.get(n) + "\n";
-			//for(StateFormula f : n.formulas) {
-			//	res += f + "\n";
-			//}
-			res += n.toString() + "\n";
-			res += n.formulas
-					.stream()
-					.filter(criteria)
-					.map(x -> x.toString() + "\n")
-					.sorted((String x, String y) -> y.length() - x.length())
-					.reduce("",String::concat);
-			res += "\"];";
-		}
-		res += "\n";
-		for(DefaultEdge e : g.edgeSet()) {
-			res += map.get(g.getEdgeSource(e)) + "->" + map.get(g.getEdgeTarget(e)) + ";\n";
-		}
-		res += "}";
-		
-		if(file != null) {
-			try {
-				FileWriter w = new FileWriter(new File(file));
-				w.write(res);
-				w.close();
-			} catch (Exception e) {
-				System.out.println("Tableaux.to_dot: could not write to file.");
-				e.printStackTrace();
-			}
-		}
-		
-		return res;
-	}
-	
-	public static String to_dot_with_tags_only_elem(String file, DirectedGraph<TableauxNode, DefaultEdge> g, Map<TableauxNode,String> tags) {
-		String res = "";
-		
-		res += "digraph {\n";
-		int i = 0;
-		HashMap<TableauxNode,String> map = new HashMap<TableauxNode, String>();
-		for(TableauxNode n : g.vertexSet()) {
-			map.put(n, "n"+i);
-			res += "n" + i++ + " [shape=" + ((n instanceof AndNode)?"box":"circle");
-			res += (n.faulty?",style=dotted":"");
-			res += ",label=\"";
-			res += "tag : " + tags.get(n) + "\n";
-			for(StateFormula f : n.formulas) {
-				if(f.is_elementary() && !(f instanceof Quantifier))
-					res += f + "\n";
-			}
-			res += "\"];";
-		}
-		res += "\n";
-		for(DefaultEdge e : g.edgeSet()) {
-			res += map.get(g.getEdgeSource(e)) + "->" + map.get(g.getEdgeTarget(e)) + ";\n";
-		}
-		res += "}";
-		
-		if(file != null) {
-			try {
-				FileWriter w = new FileWriter(new File(file));
-				w.write(res);
-				w.close();
-			} catch (Exception e) {
-				System.out.println("Tableaux.to_dot: could not write to file.");
-				e.printStackTrace();
-			}
-		}
-		
-		return res;
-	}
-	
-	
-	public static String to_dot_with_tags_2(String file, DirectedGraph<ModelNode, DefaultEdge> g, Map<ModelNode,String> tags) {
-		String res = "";
-		
-		res += "digraph {\n";
-		int i = 0;
-		HashMap<ModelNode,String> map = new HashMap<ModelNode, String>();
-		for(ModelNode n : g.vertexSet()) {
-			map.put(n, "n"+i);
-			res += "n" + i++ + " [shape=box,label=\"";
-			res += "tag : " + tags.get(n) + "\n";
-			for(StateFormula f : n.formulas) {
-				res += f + "\n";
-			}
-			res += "\"];";
-		}
-		res += "\n";
-		for(DefaultEdge e : g.edgeSet()) {
-			res += map.get(g.getEdgeSource(e)) + "->" + map.get(g.getEdgeTarget(e)) + ";\n";
-		}
-		res += "}";
-		
-		if(file != null) {
-			try {
-				file = file.replace('@', '_');
-				File f = new File(file);
-				f.getParentFile().mkdirs();
-				FileWriter w = new FileWriter(f);
-				w.write(res);
-				w.close();
-			} catch (Exception e) {
-				System.out.println("Tableaux.to_dot: could not write to file.");
-				e.printStackTrace();
-			}
-		}
-		
-		return res;
-	}	
-	
-		
 
 }

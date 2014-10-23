@@ -1,13 +1,16 @@
 --Interface
 
-r;
+t;
 
 --InitialState
 
-True;
+p && q;
 
 --Specification
 
-OG((c0 && c1 && c2) || (!c0 && !c1 && !c2));
 
-AG(r <-> (c0 && c1 && c2) || (c0 && c1 && !c2) || (c1 && c2 && !c0) || (c0 && c2 && !c1));
+AG(EX p);
+
+OG(t);
+
+AG(t <-> (p && q) || q);
