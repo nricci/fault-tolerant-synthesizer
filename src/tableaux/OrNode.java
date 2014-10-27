@@ -34,7 +34,7 @@ public class OrNode extends TableauxNode {
 	
 	@Override
 	public String toString() {
-		return (faulty?"F":"") + "Or-" + id;
+		return (faulty?"F":"") + "Or-" + Integer.toHexString(this.hashCode());
 	}
 	
 	

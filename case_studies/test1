@@ -1,16 +1,16 @@
 --Interface
 
-t;
+a;
 
 --InitialState
 
-p && q;
+a && b;
 
 --Specification
 
+AG(!b -> EX(!a));
 
-AG(EX p);
+AG(b -> EX(!b));
 
-OG(t);
+OG(a&&b);
 
-AG(t <-> (p && q) || q);

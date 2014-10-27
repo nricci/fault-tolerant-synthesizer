@@ -82,6 +82,9 @@ public class Main {
 			assert t.root != null;
 			
 			t.do_tableau(true);
+			
+
+			t.to_dot("output/tableaux.dot", Debug.node_render_min);
 			System.out.println("tableau finished: " +  t.get_graph().vertexSet().size() + " nodes, "
 					+ t.get_graph().edgeSet().size() + " edges.");
 			
@@ -100,6 +103,8 @@ public class Main {
 			System.out.println("deontic: " + t.detect_elementary_faults() + " faults detected.");
 			
 			
+
+			t.to_dot("output/tableaux_after_delete.dot", Debug.node_render_min);
 			System.out.println("tableau after delete: " +  t.get_graph().vertexSet().size() + " nodes, "
 					+ t.get_graph().edgeSet().size() + " edges.");
 			t.commit();		
@@ -108,65 +113,77 @@ public class Main {
 			assert t.root != null;
 			
 			// ALTERNATIVAS PARA FALLAS
+			int method = 1;
+			Relation<AndNode,AndNode> rel = null;
 			
-			
-			System.out.print("[fault-injection] ... ");
-			Relation<AndNode,AndNode> rel = new FaultInjectorII(t).inject_faults();
-			System.out.println("done.");
-			System.out.print("[non-masking relation] ... ");
-			//Relation<AndNode,AndNode> rel =  new NonMaskingCalculator(t).compute();
-			System.out.println("done.");
-			
-			for(TableauxNode n : t.get_graph().vertexSet()) {
-				if (n instanceof AndNode && n.faulty) {
-					Set<?> set = rel
-							.stream()
-							.filter(p -> p.first.equals(n))
-							.map(p -> p.second)
-							.filter(x -> !x.faulty)
-							.collect(Collectors.toSet());
-					if(set.isEmpty())
-						System.out.println("Untollerated Fault : " + n);
+			switch(method) {
+			case 1:
+				// ON THE FLY ORIGINAL
+				
+				System.out.print("[fault-injection (original)] ... ");
+				t.inject_faults();
+				System.out.println("done.");
+				System.out.print("[non-masking relation] ... ");
+				rel =  t.masking_relation;
+				System.out.println("Untollerated Fault : " + t.nonmasking_faults);
+				System.out.println("done.");
+			break;
+			case 2:
+				// IN STAGES
+				
+				System.out.print("[fault-injection (stages)] ... ");
+				new FaultInjector(t).inject_faults();
+				System.out.println("done.");
+				System.out.print("[non-masking relation] ... ");
+				rel =  new NonMaskingCalculator(t).compute();
+				System.out.println("done.");
+				
+				for(TableauxNode n : t.get_graph().vertexSet()) {
+					if (n instanceof AndNode && n.faulty) {
+						Set<?> set = rel
+								.stream()
+								.filter(p -> p.first.equals(n))
+								.map(p -> p.second)
+								.filter(x -> !x.faulty)
+								.collect(Collectors.toSet());
+						if(set.isEmpty())
+							System.out.println("Untollerated Fault : " + n);
+					}
 				}
+			break;	
+			case 3:
+				// ON THE FLY NUEVO
+				
+				System.out.print("[fault-injection (new onthefly)] ... ");
+				rel = new FaultInjectorII(t).inject_faults();
+				System.out.println("done.");
+				System.out.print("[non-masking relation] ... ");
+				System.out.println("done.");
+				
+				for(TableauxNode n : t.get_graph().vertexSet()) {
+					if (n instanceof AndNode && n.faulty) {
+						Set<?> set = rel
+								.stream()
+								.filter(p -> p.first.equals(n))
+								.map(p -> p.second)
+								.filter(x -> !x.faulty)
+								.collect(Collectors.toSet());
+						if(set.isEmpty())
+							System.out.println("Untollerated Fault : " + n);
+					}
+				}
+			break;	
+			default:
+				assert false;	
 			}
 			
-			/*
-			System.out.print("[fault-injection] ... ");
-			t.inject_faults();
-			System.out.println("done.");
-			System.out.print("[non-masking relation] ... ");
-			Relation<AndNode,AndNode> rel =  new Relation(t.masking_relation);
-			System.out.println("Untollerated Fault : " + t.nonmasking_faults);
-			System.out.println("done.");		
-			*/
+			assert rel != null;
 			
-			t.to_dot("output/tableaux_nmask.dot", Debug.node_render_min, rel);
+			t.to_dot("output/final_tableaux_rel.dot", Debug.node_render_min, rel);
+			t.to_dot("output/final_tableaux.dot", Debug.node_render_min);
+			t.to_dot_levels_of_tolerance("output/levels.dot", null, rel);
 			
-			
-			
-			Debug.to_file(
-					Debug.to_dot(t.get_graph(), Debug.default_node_render, SetUtils.make_set()), 
-					"output/final_tableaux.dot"
-				);
-			Debug.to_file(
-					Debug.to_dot(t.get_graph(), Debug.node_render_min, SetUtils.make_set()), 
-					"output/final_tableaux_min.dot"
-				);	
-			Debug.to_file(
-					Debug.to_dot(t.extract_AND_induced_graph(t.get_graph()), Debug.node_render_min, rel), 
-					"output/collapsed_tableaux_min.dot"
-				);
-			/*Debug.to_file(
-					Debug.to_mega_dot(
-							t.get_graph(), 
-							Debug.node_render_min,
-							t.masking_relation,
-							t.nonmasking_faults
-							), 
-					"output/mega_tableaux.dot"
-				);
-			
-		*/
+		
 			long end_time = System.currentTimeMillis();
 			System.out.println("total synthesis time: " +  (end_time - start_time) + " ms.");
 			System.out.println("final tableau : " +  t.get_graph().vertexSet().size() + " nodes, "

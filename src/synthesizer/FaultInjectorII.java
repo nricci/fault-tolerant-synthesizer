@@ -68,7 +68,7 @@ public class FaultInjectorII {
 		*/
 		while(!pending_faults.isEmpty()) { 
 			fault_generators = new HashSet<>();
-			_t.to_dot("output/inject_"+step+"_start.dot", Debug.node_render_min, masked_by);
+			if(debug) _t.to_dot("output/inject_"+step+"_start.dot", Debug.node_render_min, masked_by);
 			
 			// INJECT GENERATORS
 			while(!pending_faults.isEmpty()) {				
@@ -80,14 +80,14 @@ public class FaultInjectorII {
 				pending_faults.remove(p);
 				injected_faults.add(p);
 			}	
-			_t.to_dot("output/inject_"+step+"_gens.dot", Debug.node_render_min, masked_by);
+			if(debug) _t.to_dot("output/inject_"+step+"_gens.dot", Debug.node_render_min, masked_by);
 			
 			_t.do_tableau(false);
-			_t.to_dot("output/inject_"+step+"_tab.dot", Debug.node_render_min, masked_by);
+			if(debug) _t.to_dot("output/inject_"+step+"_tab.dot", Debug.node_render_min, masked_by);
 			
 			 masked_by = new MaskingCalculator(_t,masked_by).compute();
 			
-			_t.to_dot("output/inject_"+step+"_remask.dot", Debug.node_render_min, masked_by);
+			 if(debug) _t.to_dot("output/inject_"+step+"_remask.dot", Debug.node_render_min, masked_by);
 
 			pending_faults = 
 					minus(detect_fault_injection_points(),injected_faults);

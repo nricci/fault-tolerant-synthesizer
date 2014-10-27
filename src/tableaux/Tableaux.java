@@ -417,6 +417,7 @@ public class Tableaux {
 		if(_nodes.isEmpty())
 			to_delete.add(n);
 		
+		if(debug) System.out.println("res : " + res);
 		return res;
 	}
 	
@@ -848,10 +849,10 @@ public class Tableaux {
 	 * ******************************************* 
 	*/
 	
-	public Map<AndNode,AndNode> masking_relation;
+	public Relation<AndNode,AndNode> masking_relation;
 	public Set<AndNode> nonmasking_faults;
 	
-	public Map<AndNode,AndNode> inject_faults() {
+	public Relation<AndNode,AndNode> inject_faults() {
 		boolean debug = true;
 		
 		// This mapping specifies all the point where a fault 
@@ -863,25 +864,18 @@ public class Tableaux {
 		// been injected.
 		Set<Pair<AndNode,DeonticProposition>> injected_faults = new HashSet<>();
 
-		// Masking Relation
-		to_dot("output/tableaux_mask.dot", Debug.node_render_min,
-				new MaskingCalculator(this).compute());
 		
-		Map<AndNode,AndNode> maskedBy = new HashMap<AndNode, AndNode>();
+		Relation<AndNode,AndNode> maskedBy = new Relation<AndNode, AndNode>();
+		maskedBy = new MaskingCalculator(this,maskedBy).compute();
 		Set<AndNode> nonmasking_faults = new HashSet<AndNode>();
-		for(AndNode n : normal_nodes()) {
-			maskedBy.put(n, n);
-		}
 		
 		pending_faults = minus(detect_fault_injection_points(),injected_faults);
 		
 		int i = 0;
 		final int step = 1;
 		if(debug && i % step == 0)
-			Debug.to_file(
-				Debug.to_dot(this.graph, Debug.default_node_render), 
-				"output/inject_step" + i + ".dot"
-			);
+			to_dot("output/inject_step" + i + ".dot",Debug.default_node_render,maskedBy);
+			
 		
 		while(!pending_faults.isEmpty()) {
 			i++;
@@ -894,7 +888,7 @@ public class Tableaux {
            
 			if(debug && i % step == 0) System.out.println("[step " + i + "] injecting  : " + p);
 			Set<OrNode> fault_generator = inject_fault(p.first, p.second.get_prop());
-			
+			if(debug && i % step == 0) System.out.println("[step " + i + "] generators  : " + fault_generator);
 			List<TableauxNode> faults = new LinkedList();
 			for(OrNode o : fault_generator) {
 				faults.addAll(expand(o,false));
@@ -903,7 +897,7 @@ public class Tableaux {
 				AndNode fault = (AndNode) n;	
 				
 				AndNode injection_point = p.first;
-				AndNode i_mask = maskedBy.get(injection_point);
+				AndNode i_mask = maskedBy.get_one(injection_point);
 				if (i_mask == null)
 					nonmasking_faults.add(fault);
 					// Add EF(reach_somesucc), don't think its nessesary
@@ -945,9 +939,9 @@ public class Tableaux {
 			if(debug && i % step == 0)
 				System.out.println("[step " + i + "] injected faults : " + faults);
 			if(debug && i % step == 0) 
-				faults.stream().forEach(x -> 
-					System.out.println("\t " + x + " is masked by " + maskedBy.get(x))				
-					);
+				for (TableauxNode f : faults) {
+					System.out.println("\t " + f + " is masked by " + maskedBy.get_one((AndNode) f));
+				}
 
 			for (AndNode a : nonmasking_faults)
 				assert graph.vertexSet().contains(a);
@@ -966,10 +960,7 @@ public class Tableaux {
 			injected_faults.add(p);
 				
 			if (debug && i % step == 0)
-				Debug.to_file(
-					Debug.to_dot(this.graph, Debug.default_node_render), 
-					"output/inject_step" + i + ".dot"
-				);
+				to_dot("output/inject_step" + i + ".dot",Debug.default_node_render,maskedBy);
 			
 			if (debug && i % step == 0) 
 				System.out.println("[step " + i + "] nodes : " + graph.vertexSet().size()
@@ -991,9 +982,9 @@ public class Tableaux {
 			//}
 			
 			
-			if (!intersection(maskedBy.keySet(),nonmasking_faults).isEmpty()) {
-				System.out.println("It pet : " + 
-						intersection(maskedBy.keySet(),nonmasking_faults)
+			if (!intersection(maskedBy.domain(),nonmasking_faults).isEmpty()) {
+				System.out.println("Error :(:(:( : " + 
+						intersection(maskedBy.domain(),nonmasking_faults)
 						.stream()
 						.map(x -> get_node(x))
 						.collect(Collectors.toSet())
@@ -1390,13 +1381,22 @@ public class Tableaux {
 	}
 	
 	public Relation<AndNode,AndNode> transitive_succ() {
-		DirectedGraph<TableauxNode, DefaultEdge> colapsed_graph = this.extract_AND_induced_graph(graph);
-		Relation<AndNode,AndNode> res = new Relation<>();
-		for(DefaultEdge e : colapsed_graph.edgeSet()) {
-			res.add(new Pair((AndNode) colapsed_graph.getEdgeSource(e),(AndNode) colapsed_graph.getEdgeTarget(e)));
+		Relation<AndNode,OrNode> tiles = new Relation<>();
+		Relation<OrNode,AndNode> blocks = new Relation<>();
+		
+		for(DefaultEdge e : this.graph.edgeSet()) {
+			TableauxNode src = this.graph.getEdgeSource(e);
+			TableauxNode tgt = this.graph.getEdgeTarget(e);
+			if(src instanceof AndNode && tgt instanceof OrNode) {
+				tiles.add(new Pair(src,tgt));
+			} else if(src instanceof OrNode && tgt instanceof AndNode) {
+				blocks.add(new Pair(src,tgt));
+			} else
+				throw new Error("Fatal: Malformed Tableaux");
 		}
-		Relation.closure(res);
-		return res;
+		
+		Relation<AndNode,AndNode> and_and = Relation.compose(tiles, blocks);
+		return Relation.closure(and_and);
 	}
 	
 	public Set<Proposition> sublabeling(TableauxNode n) {
@@ -1959,6 +1959,13 @@ public class Tableaux {
 	 * 
 	 * ******************************************* 
 	*/
+	
+	public void to_dot(
+			String path,
+			Function<TableauxNode,String> node_renderer
+		) {
+		to_dot(path, node_renderer, new Relation<>());
+	}
 
 	public void to_dot(
 				String path,
@@ -1989,6 +1996,86 @@ public class Tableaux {
 		res += "}";		
 		to_file(res, path);
 	}
+	
+	
+	public Set<AndNode> tolerated_faults(Relation<AndNode,AndNode> nmask) {
+		Set<AndNode> tolerated_faults = nmask
+				.stream()
+				.filter(p -> normal_nodes().contains(p.first))
+				.map(p -> p.second)
+				.collect(Collectors.toSet());
+		
+		// Supongo que la relacion es transitiva, asi que no hace
+		// falta lo proximo, en principio.
+		Set<AndNode> _new;
+		/*do {
+			_new = nmask
+				.stream()
+				.filter(p -> tolerated_faults.contains(p.first))
+				.map(p -> p.second)
+				.collect(Collectors.toSet());
+			tolerated_faults.addAll(_new);
+		} while (!_new.isEmpty());*/
+		return intersection(tolerated_faults,faulty_nodes());
+	}
+	
+	
+	public void to_dot_levels_of_tolerance(
+			String path,
+			Function<TableauxNode,String> node_renderer,
+			Relation<AndNode,AndNode> nmask
+		) 
+	{		
+
+		Set<AndNode> norm = normal_nodes();
+		Set<AndNode> yellow = tolerated_faults(nmask);		
+		Set<AndNode> red = minus(faulty_nodes(), yellow);
+		
+		String res = "";	
+		res += "digraph {\n";
+		
+		int i = 0;
+		HashMap<TableauxNode,String> map = new HashMap<TableauxNode, String>();
+		
+		for(TableauxNode n : graph.vertexSet()) {
+			map.put(n, "n"+i);
+			res += "n"+i;
+			String style = null;
+			if(norm.contains(n))
+				style = "color=green";
+			else if (yellow.contains(n))
+				style = "color=yellow";
+			else if (red.contains(n))
+				style = "color=red";
+			
+			res +=  "[shape=" + ((n instanceof AndNode)?"box":"circle") +
+					((style != null)?("," + style): "") +
+					",label=\"" + n.toString() + "\n" +
+					n.formulas
+					.stream()
+					.filter(x -> x.is_elementary())
+					.filter(x -> x.is_literal() || x instanceof DeonticProposition)
+					.map(x -> x.toString() + "\n")
+					.sorted((String x, String y) -> y.length() - x.length())
+					.reduce("",String::concat) 
+					+ "\"];";
+			
+			res += "\n";
+			i++;
+		}
+		res += "\n";
+		for(DefaultEdge e : graph.edgeSet()) {
+			res += map.get(graph.getEdgeSource(e)) + "->" + map.get(graph.getEdgeTarget(e)) + ";\n";
+		}
+		
+		//for(Pair<AndNode,AndNode> p : nmask) {
+			//res += map.get(p.first) + "->" + map.get(p.second) + " [color=red];\n";
+		//}
+		
+		res += "}";		
+		to_file(res, path);
+	}
+	
 	
 	private void to_file(String content, String path) {
 		if(path != null) {

@@ -142,7 +142,8 @@ public class AndNode extends TableauxNode {
 
 	@Override
 	public String toString() {
-		return (faulty?"F":"") + "And-" + id;
+		Integer.toUnsignedLong(id);
+		return (faulty?"F":"") + "And-" + Integer.toHexString(this.hashCode());
 	}
 	
 	

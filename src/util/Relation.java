@@ -8,6 +8,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import tableaux.AndNode;
+
 public class Relation<A,B> implements Set<Pair<A,B>> {
 
 	private Set<Pair<A,B>> _impl;
@@ -38,6 +40,19 @@ public class Relation<A,B> implements Set<Pair<A,B>> {
 				.filter(p -> p.first.equals(a))
 				.map(p -> p.second)
 				.collect(Collectors.toSet());
+	}
+	
+	// METODO PARCHE
+	public B get_one(A a) {
+		return _impl
+				.stream()
+				.filter(p -> p.first.equals(a))
+				.map(p -> p.second)
+				.findFirst().get();
+	}
+	
+	public void put(A x, B y) {
+		this.add(new Pair(x,y));		
 	}
 	
 	
@@ -143,6 +158,7 @@ public class Relation<A,B> implements Set<Pair<A,B>> {
 	public void clear() {
 		_impl.clear();		
 	}
+
 	
 	
 	

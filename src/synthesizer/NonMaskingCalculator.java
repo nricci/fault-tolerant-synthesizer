@@ -17,9 +17,12 @@ public class NonMaskingCalculator {
 	
 	private Relation<AndNode,AndNode> _relation;
 	
+	private Relation<AndNode,AndNode> _transitive_post;
+	
 	public NonMaskingCalculator(Tableaux t) {
 		_t = t;
 		_relation = new Relation<>();
+		_transitive_post = _t.transitive_succ();
 	}
 	
 	private int initialize() {
@@ -44,8 +47,8 @@ public class NonMaskingCalculator {
 		for(Pair<AndNode,AndNode> p : _relation)
 			assert _t.sublabeling(p.first).equals(_t.sublabeling(p.second));
 		
-		Relation<AndNode,AndNode> transitive_post = _t.transitive_succ();
 		
+				
 		boolean change = false;
 		do {
 			System.out.println("relation size : " + _relation.size());
@@ -61,7 +64,7 @@ public class NonMaskingCalculator {
 				//assert(f1.faulty);
 				for(AndNode n2 : _t.postN(n1)) {
 					boolean ok = false;
-					for(AndNode f2 : transitive_post.get(f1)) {
+					for(AndNode f2 : _transitive_post.get(f1)) {
 						if(_relation.contains(new Pair(n2,f2)))
 							ok = true;
 						if(!f2.faulty)
