@@ -14,7 +14,11 @@ public final class SetUtils {
 		return res;
 	}
 	
-	
+	public static <E> Set<E> clone_set(Set<E> set) { 
+		Set<E> res = new HashSet<E>();
+		res.addAll(set);
+		return res;
+	}
 	
 	public static <E> Set<E> union(Set<E> s1, Set<E> s2) {
 		assert s1 != null && s2 != null : 

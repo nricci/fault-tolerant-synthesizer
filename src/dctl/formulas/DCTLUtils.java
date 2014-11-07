@@ -7,9 +7,11 @@ package dctl.formulas;
 
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import util.Predicate;
 import static util.SetUtils.make_set;
 import static util.SetUtils.minus;
@@ -101,6 +103,7 @@ public class DCTLUtils {
 	@SuppressWarnings("unchecked")
 	private static Set<Set<StateFormula>> closure_impl_2(Set<StateFormula> set) {
 		assert(set != null);
+		boolean debug = false;
 		
 		Tree<Set<StateFormula>> decomp = new Tree(set);
 		LinkedList<Tree<Set<StateFormula>>> frontier = new LinkedList();
@@ -109,7 +112,10 @@ public class DCTLUtils {
 		Set<Set<StateFormula>> closed_sets = new HashSet();
 		int inconsistencies = 0;
 		
+		int loop = 0;
 		while(!frontier.isEmpty()) {
+			if(debug && (loop++ % 500) == 0) System.out.println(frontier.size());
+			
 			//assert deco_ok(decomp);
 			Tree<Set<StateFormula>> current = frontier.pop();
 			if(is_consistent(current.val())) {
@@ -156,8 +162,41 @@ public class DCTLUtils {
 				inconsistencies++;
 			}
 		}
-		//System.out.println("closure exit");
-		return closed_sets;
+		
+		if(debug) System.out.println("closure exit... flattening tree.");
+		return flatten(decomp);
+	}
+	
+	private static Set<Set<StateFormula>> flatten(Tree<Set<StateFormula>> t) {
+		boolean debug = false;
+		
+		LinkedList<Tree<Set<StateFormula>>> trees = new LinkedList<Tree<Set<StateFormula>>>();
+		Set<Set<StateFormula>> res = new HashSet<Set<StateFormula>>();
+		trees.add(t);
+		
+		int loop = 0;
+		while(!trees.isEmpty()) {
+			if(debug && (loop++ % 500) == 0) System.out.println(trees.size() + "\n" + res.size() + "\n");
+			
+			Tree<Set<StateFormula>> current = trees.pop();
+			if(current.left() != null && current.right() != null) {
+				current.left().val().addAll(current.val());
+				trees.push(current.left());
+				current.right().val().addAll(current.val());
+				trees.push(current.right());
+			} else if(current.left() != null) {
+				current.left().val().addAll(current.val());
+				trees.push(current.left());
+			} else if(current.right() != null) {
+				current.right().val().addAll(current.val());
+				trees.push(current.right());
+			} else {
+				res.add(current.val());
+			}			
+		}
+		
+		if(debug) System.out.println("flattening ended.");
+		return res;
 	}
 	
 	private static boolean check_loop_variant(Tree<Set<StateFormula>> root) {

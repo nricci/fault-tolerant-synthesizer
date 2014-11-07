@@ -27,6 +27,7 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.Subgraph;
 
 import synthesizer.MaskingCalculator;
+import synthesizer.ModelNode;
 import util.Debug;
 import util.Pair;
 import util.Relation;
@@ -147,6 +148,10 @@ public class Tableaux {
 		return this.graph;
 	}
 	
+	public Set<TableauxNode> nodes() {
+		return this.graph.vertexSet();
+	}
+	
 	public Set<AndNode> and_nodes() {
 		return this
 				.graph
@@ -162,6 +167,20 @@ public class Tableaux {
 		if(!graph.addVertex(n))
 			return graph.vertexSet().stream().filter(x -> x.equals(n)).findFirst().get();
 		return n;
+	}
+	
+	public void delete_node(TableauxNode n) {
+		if(n.equals(root)) root = null;
+		graph.removeVertex(n);
+	}
+	
+	public Set<TableauxNode> flush() {
+		Set<TableauxNode> res = new HashSet<TableauxNode>();
+		res.addAll(to_delete);
+		for(TableauxNode n : to_delete) 
+			delete_node(n);
+		to_delete.clear();
+		return res;		
 	}
 	
 	public void add_edge(TableauxNode x, TableauxNode y) {
@@ -180,7 +199,7 @@ public class Tableaux {
 		return res;
 	}
 	
-	private Set<TableauxNode> succesors(TableauxNode n) {
+	public Set<TableauxNode> succesors(TableauxNode n) {
 		HashSet<TableauxNode> res = new HashSet<TableauxNode>();
 		for(DefaultEdge e : graph.outgoingEdgesOf(n))
 			res.add(graph.getEdgeTarget(e));
@@ -202,6 +221,11 @@ public class Tableaux {
 		return res;
 	}
 	
+	public Set<TableauxNode> predecesors(TableauxNode n) {
+		return predecesors(n, this.graph);
+	}
+	
+	
 	private Set<TableauxNode> predecesors(TableauxNode n, DirectedGraph<TableauxNode, DefaultEdge> graph) {
 		HashSet<TableauxNode> res = new HashSet<TableauxNode>();
 		for(DefaultEdge e : graph.incomingEdgesOf(n))
@@ -215,6 +239,23 @@ public class Tableaux {
 			if(g.outgoingEdgesOf(n).isEmpty()) 
 				res.add(n);
 		return res;
+	}
+	
+	public Set<TableauxNode> reachable_nodes(TableauxNode n) {
+		return reachable_nodes(make_set(n));
+	}
+	
+	public Set<TableauxNode> reachable_nodes(Set<TableauxNode> ns) {
+		Set<TableauxNode> reachable = new HashSet<TableauxNode>();
+		reachable.addAll(ns);
+		
+		int k;
+		do {
+			k = reachable.size();
+			reachable.addAll(succesors(reachable));
+		} while(reachable.size() > k);
+		
+		return reachable;
 	}
 	
 	/*
@@ -246,6 +287,8 @@ public class Tableaux {
 				.isPresent()) 
 		{
 			res.addAll(expand(deontic_filter));
+			//System.out.println("*");
+			
 			//System.out.println("[do_tableau] step : " + step++);
 			/*Debug.to_file(
 					Debug.to_dot(this.graph, Debug.default_node_render), 
@@ -344,7 +387,9 @@ public class Tableaux {
 		if(_succs.isEmpty())
 			to_delete.add(n);
 		
-		for(Set<StateFormula> s : _succs) {
+		_nodes = _succs.stream().map(s -> new AndNode(s)).collect(Collectors.toSet());
+		
+		/*for(Set<StateFormula> s : _succs) {
 			assert is_closed(s);
 			Set<StateFormula> triggered_guards = new HashSet<>();
 			Set<Set<StateFormula>> guard_closure = new HashSet<>();
@@ -361,7 +406,7 @@ public class Tableaux {
 				if(is_consistent(_g))
 					_nodes.add(new AndNode(_g));
 			}				
-		}
+		}*/
 
 		if(debug) System.out.println("_nodes : " + _nodes);
 		if(deontic_filter) {
@@ -496,6 +541,30 @@ public class Tableaux {
 	 * **************************************
 	*/
 	
+	public int deletion_rules() {
+		int count = 0;
+		
+		do {
+			count += delete_inconsistent_prop();
+			count += delete_AU();
+			count += delete_EU();
+			count += delete_neighboursII();
+		
+			//System.out.println(to_check);
+			System.out.println(to_delete);
+		
+			for(TableauxNode n : to_delete) {
+				graph.removeVertex(n);
+			}
+			to_delete.clear();
+			to_check.clear();
+			
+		} while(count > 0);
+		
+		return count;
+	}
+	
+	
 	public int delete_inconsistent() {
 		int count = 0;
 		count += delete_inconsistent_prop();
@@ -504,7 +573,7 @@ public class Tableaux {
 		count += delete_neighbours();
 		
 		//System.out.println(to_check);
-		System.out.println(to_delete);
+		//System.out.println(to_delete);
 		
 		for(TableauxNode n : to_delete) {
 			graph.removeVertex(n);
@@ -522,7 +591,7 @@ public class Tableaux {
 		Set<TableauxNode> ll = graph.vertexSet();
 		for(TableauxNode n : ll) {
 			if(!reachable.contains(n)) {
-				delete_node(n);
+				remove_node(n);
 				count++;
 			}
 		}
@@ -538,23 +607,38 @@ public class Tableaux {
 		
 		for(TableauxNode n : graph.vertexSet()) {
 			if(!is_consistent(n.formulas)) {
-				delete_node(n);
+				remove_node(n);
 				count++;
 			}
 		}
 		return count;
 	}
 	
-
+	private int delete_neighboursII() {
+		int count = 0;
+		for(TableauxNode n : graph.vertexSet()) {
+			if(n instanceof AndNode) {
+				remove_node(n);
+				count++;
+			} else if (n instanceof OrNode) {
+				if(graph.outgoingEdgesOf(n).isEmpty()) {
+					remove_node(n);
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+	
 	private int delete_neighbours() {
 		int count = 0;
 		for(TableauxNode n : to_check) {
 			if(n instanceof AndNode) {
-				delete_node(n);
+				remove_node(n);
 				count++;
 			} else if (n instanceof OrNode) {
 				if(graph.outgoingEdgesOf(n).isEmpty()) {
-					delete_node(n);
+					remove_node(n);
 					count++;
 				}
 			}
@@ -575,7 +659,7 @@ public class Tableaux {
 					/*(!reach(n,new HashSet<TableauxNode>(),
 						((Until)(((Exists) f).arg())).arg_left(),
 						((Until)(((Exists) f).arg())).arg_right())))*/ {
-					delete_node(n);
+					remove_node(n);
 					count++;
 				}
 			}
@@ -596,7 +680,7 @@ public class Tableaux {
 					/*(!full_subdag(n,new HashSet<TableauxNode>(),
 						((Until)(((Forall) f).arg())).arg_left(),
 						((Until)(((Forall) f).arg())).arg_right())))*/ {			
-					delete_node(n);
+					remove_node(n);
 					count++;
 				}
 			}
@@ -605,7 +689,7 @@ public class Tableaux {
 	}
 	
 	
-	private void delete_node(TableauxNode n) {
+	private void remove_node(TableauxNode n) {
 		for(DefaultEdge e : graph.incomingEdgesOf(n))
 			if(
 				graph.getEdgeSource(e) != n && 
@@ -1304,6 +1388,7 @@ public class Tableaux {
 				.collect(Collectors.toSet());
 	}
 	
+	
 	public Set<AndNode> preN(AndNode n) {
 		return predecesors(n, graph)
 				.stream()
@@ -1445,6 +1530,12 @@ public class Tableaux {
 			return extract_AND_induced_graph(dag);
 		} else if(g instanceof Exists) {
 			Map<TableauxNode,Integer> graph_tagging = dag_tagEU(n, (Exists) g, f, h);
+			
+			assert graph_tagging != null;
+			// Assertion
+			//for(TableauxNode k : this.nodes()) 
+			//	assert graph_tagging.keySet().contains(k) : "graph tagging contains no mapping for " + k;
+			
 			DirectedGraph<TableauxNode, DefaultEdge> dag = dag_extract_EU_dag(n, graph_tagging); 
 			return extract_AND_induced_graph(dag);
 		}
@@ -1524,7 +1615,7 @@ public class Tableaux {
 		return _dag;
 	}
 	
-	private Map<TableauxNode,Integer> dag_tagAU(AndNode n, Forall g, StateFormula f, StateFormula h) {
+	public Map<TableauxNode,Integer> dag_tagAU(AndNode n, Forall g, StateFormula f, StateFormula h) {
 		Map<TableauxNode,Integer> tag = new HashMap<TableauxNode,Integer>();
 		Until u = (Until) g.arg();
 		assert u.arg_left() == f;
@@ -1610,6 +1701,7 @@ public class Tableaux {
 	
 	private DirectedGraph<TableauxNode, DefaultEdge> dag_extract_EU_dag(AndNode n, Map<TableauxNode,Integer> tag) {
 		DirectedGraph<TableauxNode, DefaultEdge> _dag = new DefaultDirectedGraph<TableauxNode, DefaultEdge>(DefaultEdge.class);
+		
 		int _halt = tag.get(n);
 		
 		_dag.addVertex(n);
@@ -1683,7 +1775,7 @@ public class Tableaux {
 	
 	
 	
-	private Map<TableauxNode,Integer> dag_tagEU(AndNode n, Exists g, StateFormula f, StateFormula h) {
+	public Map<TableauxNode,Integer> dag_tagEU(AndNode n, Exists g, StateFormula f, StateFormula h) {
 		Map<TableauxNode,Integer> tag = new HashMap<TableauxNode,Integer>();
 		Until u = (Until) g.arg();
 		assert u.arg_left() == f;

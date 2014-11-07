@@ -1,11 +1,20 @@
 --Interface
 
-in,out;
+a,b,c;
 
 --InitialState
 
-!in && !out;
+True;
 
 --Specification
 
-OG(in <-> out);
+
+
+AG(a -> EX(!a));
+AG(!a -> AX(!a));
+
+
+AG(b -> EX(!b));
+AG(!b -> AX(!b));
+
+AG(a -> AX(b));

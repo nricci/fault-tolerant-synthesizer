@@ -1,0 +1,19 @@
+--Interface
+
+on1, on2;
+
+--InitialState
+
+True;
+
+--Specification
+
+/* bulb 1 */
+AG(!on1 <-> AX(on1));
+AG(on1 <-> AX(!on1));
+
+/* bulb 2 */
+AG(!on2 <-> AX(on2));
+AG(on2 <-> AX(!on2));
+
+AG(!(on1 && on2));

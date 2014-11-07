@@ -20,10 +20,7 @@ import org.jgrapht.graph.DefaultEdge;
 
 import com.sun.corba.se.spi.ior.MakeImmutable;
 
-import synthesizer.FaultInjector;
-import synthesizer.FaultInjectorII;
-import synthesizer.NonMaskingCalculator;
-import tableaux.ModelNode;
+import synthesizer.*;
 import parser.Parser;
 import tableaux.AndNode;
 import tableaux.OrNode;
@@ -56,64 +53,55 @@ public class Main {
 	            public void run() {
 					
 					System.out.print("End of Execution. ");
-					/*try {
+					try {
 						System.out.print("Calling dot2jpeg.sh...\n");
 						Runtime.getRuntime().exec("./dot2jpeg.sh");
 					} catch (IOException e) {
 						e.printStackTrace();
-					}*/
+					}
 	            }  
 			});
 			
-			
-			
-			Specification s = Parser.parse_specification(args[0]);
 			long start_time = System.currentTimeMillis();
 			
-			System.out.println("specification:\n\n" + s.toString());
+			// Parsing
+			Specification s = Parser.parse_specification(args[0]);
+			//System.out.println("specification:\n\n" + s.toString());
 			
 			
+			
+			// Tableaux
 			Tableaux t = new Tableaux(s);
-			
-			int stage = 0;
-			//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
-			
-			int changes = 0;
-			assert t.root != null;
-			
 			t.do_tableau(true);
 			
-
-			t.to_dot("output/tableaux.dot", Debug.node_render_min);
+			//t.to_dot("output/tableaux.dot", Debug.default_node_render);
 			System.out.println("tableau finished: " +  t.get_graph().vertexSet().size() + " nodes, "
 					+ t.get_graph().edgeSet().size() + " edges.");
 			
 			assert t.root != null;
 			
-			changes = 0;
-			do {
-				changes = t.delete_inconsistent();
-				System.out.println("delete: " + changes + " nodes removed.");
-				//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
-
-			} while (changes > 0);
-			assert t.root != null;
-			//Tableaux.to_dot("output/tableaux" + (stage++) + ".dot",t.get_graph());
-			System.out.println("delete: " + t.delete_unreachable() + " unreachable nodes removed.");
-			System.out.println("deontic: " + t.detect_elementary_faults() + " faults detected.");
 			
 			
+			// Deletion
+			int changes = new DeletionRules(t).apply().size();
+			System.out.println("delete: " + changes + " nodes removed.");
+			
+			if(t.root == null) {
+				System.out.println("Specification is inconsistent.");
+				return;
+			}
 
-			t.to_dot("output/tableaux_after_delete.dot", Debug.node_render_min);
+			//t.to_dot("output/tableaux_after_delete.dot", Debug.default_node_render);
 			System.out.println("tableau after delete: " +  t.get_graph().vertexSet().size() + " nodes, "
 					+ t.get_graph().edgeSet().size() + " edges.");
+			
+			assert t.root != null;
 			t.commit();		
 
 			
-			assert t.root != null;
 			
 			// ALTERNATIVAS PARA FALLAS
-			int method = 1;
+			int method = 4;
 			Relation<AndNode,AndNode> rel = null;
 			
 			switch(method) {
@@ -129,9 +117,9 @@ public class Main {
 				System.out.println("done.");
 			break;
 			case 2:
-				// IN STAGES
+				// EL QUE FUNCA
 				
-				System.out.print("[fault-injection (stages)] ... ");
+				System.out.print("[fault-injection (good)] ... ");
 				new FaultInjector(t).inject_faults();
 				System.out.println("done.");
 				System.out.print("[non-masking relation] ... ");
@@ -172,15 +160,42 @@ public class Main {
 							System.out.println("Untollerated Fault : " + n);
 					}
 				}
-			break;	
+			break;
+			case 4:
+				// Masking y nomask por iteraciones
+				
+				System.out.print("[fault-injection (TryIV)] ... ");
+				
+				t.to_dot("output/pre_faults.dot", Debug.default_node_render);
+				rel = new FaultInjectorIII(t).inject_faults();
+				t.to_dot("output/pos_faults.dot", Debug.default_node_render,rel);
+				
+				System.out.println("done.");
+				System.out.print("[non-masking relation] ... ");
+				System.out.println("done.");
+				
+				for(TableauxNode n : t.get_graph().vertexSet()) {
+					if (n instanceof AndNode && n.faulty) {
+						Set<?> set = rel
+								.stream()
+								.filter(p -> p.first.equals(n))
+								.map(p -> p.second)
+								.filter(x -> !x.faulty)
+								.collect(Collectors.toSet());
+						if(set.isEmpty())
+							System.out.println("Untollerated Fault : " + n);
+					}
+				}
+			break;
+			
 			default:
 				assert false;	
 			}
 			
 			assert rel != null;
 			
-			t.to_dot("output/final_tableaux_rel.dot", Debug.node_render_min, rel);
-			t.to_dot("output/final_tableaux.dot", Debug.node_render_min);
+			//t.to_dot("output/final_tableaux_rel.dot", Debug.node_render_min, rel);
+			t.to_dot("output/final_tableaux.dot", Debug.default_node_render);
 			t.to_dot_levels_of_tolerance("output/levels.dot", null, rel);
 			
 		
@@ -190,17 +205,16 @@ public class Main {
 					+ t.get_graph().edgeSet().size() + " edges.");
 			
 			
-			//DirectedGraph<ModelNode,DefaultEdge> model = t.extract_model();
+			
+			// Model Extraction
+			ModelExtractor ex = new ModelExtractor(t);
+			DirectedGraph<ModelNode,DefaultEdge> model = ex.extract_model();
+			Debug.to_file(Debug.to_dot(model, Debug.model_node_render_min), "output/model.dot");
 			
 			
-			//assert union(t.masking_relation.keySet(),t.nonmasking_faults).equals(t.get_graph().vertexSet().stream().filter(x -> x instanceof AndNode).collect(Collectors.toSet()));
-			
-			//Debug.to_file(
-			//		Debug.model_to_dot(model,t.masking_relation), 
-			//		"output/model.dot"
-			//	);
-			
-			
+			// Program Extraction
+			ProgramExtractor p = new ProgramExtractor(model);
+			Debug.to_file(p.extract_ftp(), "output/program.txt");
 			
 			
 			

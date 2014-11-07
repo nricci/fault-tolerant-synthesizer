@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sun.corba.se.spi.ior.MakeImmutable;
+
 import dctl.formulas.And;
 import dctl.formulas.DeonticProposition;
 import dctl.formulas.Exists;
@@ -23,6 +25,7 @@ import tableaux.OrNode;
 import tableaux.Tableaux;
 import tableaux.TableauxNode;
 import util.Pair;
+import static util.SetUtils.make_set;
 
 public class FaultInjector {
 	
@@ -37,14 +40,14 @@ public class FaultInjector {
 
 	public void inject_faults() {
 		Pair p;
-		System.out.println("\n injection\t\t OrNodes\t\t AndNodes\t\t Deletions\n");
+		//System.out.println("\n injection\t\t OrNodes\t\t AndNodes\t\t Deletions\n");
 		while ((p = get_fault_injection_point()) != null) {
 			
 			Set<OrNode> or_nodes = inject_fault(p);
 			List<TableauxNode> and_nodes = _t.do_tableau(false);
 			int deletions = _t.delete_inconsistent();
 			
-			System.out.print(p +"\t\t "+ or_nodes +"\t\t "+ and_nodes +"\t\t "+ deletions+"\n");			
+			//System.out.print(p +"\t\t "+ or_nodes +"\t\t "+ and_nodes +"\t\t "+ deletions+"\n");			
 		}
 	}
 	
@@ -92,6 +95,8 @@ public class FaultInjector {
 				.filter(x -> x instanceof DeonticProposition)
 				.collect(Collectors.toSet());
 		
+		// Override!!!
+		next_obligations = make_set();
 		
 		// This is it. Every formula to be passed on to the next node must be here.
 		Set<StateFormula> next_formulas = union(next_literals,next_obligations);

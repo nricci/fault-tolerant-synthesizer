@@ -12,8 +12,8 @@ import java.util.function.Predicate;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
+import synthesizer.ModelNode;
 import tableaux.AndNode;
-import tableaux.ModelNode;
 import tableaux.OrNode;
 import tableaux.TableauxNode;
 import dctl.formulas.DeonticProposition;
@@ -21,7 +21,7 @@ import dctl.formulas.StateFormula;
 
 public class Debug {
 	
-	public static final Function<TableauxNode,String> default_node_render = 
+	public static final Function<TableauxNode,String> full_node_render = 
 			(TableauxNode n) -> (
 					"[shape=" + ((n instanceof AndNode)?"box":"circle") +
 					(n.faulty?",style=dotted":"") +
@@ -68,7 +68,8 @@ public class Debug {
 					(ModelNode n) -> (
 					"[shape=box" +
 					(n.faulty?",style=dotted":"") +
-					",label=\"" + n.toString() + "\n" +
+					",label=\"" + n.hashCode() + "\n" +
+					"copy=" + n.copyOf + "\n" +
 					n.formulas
 					.stream()
 					.filter(x -> x.is_elementary())
@@ -79,6 +80,7 @@ public class Debug {
 					+ "\"];"
 			);			
 			
+	public static final Function<TableauxNode,String> default_node_render = full_node_render;				
 			
 
 	public static <N> String to_dot(

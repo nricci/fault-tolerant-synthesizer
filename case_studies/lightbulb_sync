@@ -1,0 +1,11 @@
+--Interface
+
+on1, on2;
+
+--InitialState
+
+True;
+
+--Specification
+
+AG(!(on1 && on2));

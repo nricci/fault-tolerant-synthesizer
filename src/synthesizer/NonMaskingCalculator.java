@@ -51,13 +51,13 @@ public class NonMaskingCalculator {
 				
 		boolean change = false;
 		do {
-			System.out.println("relation size : " + _relation.size());
+			//System.out.println("relation size : " + _relation.size());
 			
 			change = false;
 			remove.clear();
 			int i = 0;
 			for(Pair<AndNode,AndNode> p : _relation) {
-				System.out.print("\r\r\r\r\r" + String.format("%05d", i++));
+				//System.out.print("\r\r\r\r\r" + String.format("%05d", i++));
 				AndNode n1 = p.first;
 				AndNode f1 = p.second;
 				//assert(!n1.faulty);
@@ -76,7 +76,7 @@ public class NonMaskingCalculator {
 					}						
 				}				
 			}
-			System.out.println("\t\tremoving " + remove.size() + "pairs.");
+			//System.out.println("\t\tremoving " + remove.size() + "pairs.");
 			_relation.removeAll(remove);
 		} while (change);
 		

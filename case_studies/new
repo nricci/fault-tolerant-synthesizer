@@ -1,0 +1,14 @@
+--Interface
+
+on;
+
+--InitialState
+
+True;
+
+--Specification
+
+AG(!on <-> AX(on));
+
+AG(on <-> AX(!on));
+
