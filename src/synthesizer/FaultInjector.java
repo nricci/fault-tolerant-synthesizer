@@ -11,11 +11,13 @@ import java.util.stream.Collectors;
 import com.sun.corba.se.spi.ior.MakeImmutable;
 
 import dctl.formulas.And;
+import dctl.formulas.DCTLUtils;
 import dctl.formulas.DeonticProposition;
 import dctl.formulas.Exists;
 import dctl.formulas.False;
 import dctl.formulas.Negation;
 import dctl.formulas.Next;
+import dctl.formulas.Obligation;
 import dctl.formulas.Or;
 import dctl.formulas.Proposition;
 import dctl.formulas.StateFormula;
@@ -45,6 +47,9 @@ public class FaultInjector {
 			
 			Set<OrNode> or_nodes = inject_fault(p);
 			List<TableauxNode> and_nodes = _t.do_tableau(false);
+			identify_redundancies(_t,and_nodes);
+			
+			
 			int deletions = _t.delete_inconsistent();
 			
 			//System.out.print(p +"\t\t "+ or_nodes +"\t\t "+ and_nodes +"\t\t "+ deletions+"\n");			
@@ -53,7 +58,21 @@ public class FaultInjector {
 	
 	
 	
-	
+	private void identify_redundancies(Tableaux t, List<TableauxNode> ands) {
+		for(TableauxNode n : ands) {
+			if(!(n instanceof AndNode)) continue;
+			Set<StateFormula> oblit = n.formulas
+					.stream()
+					.filter(f -> f instanceof DeonticProposition)
+					.map(f -> (DeonticProposition) f)
+					.map(ob -> ob.get_prop())
+					.collect(Collectors.toSet());
+			if(!DCTLUtils.is_consistent(oblit)) {
+				_t.delete_node(n);
+			}
+			
+		}
+	}
 	
 	
 	
@@ -96,7 +115,7 @@ public class FaultInjector {
 				.collect(Collectors.toSet());
 		
 		// Override!!!
-		next_obligations = make_set();
+		//next_obligations = make_set();
 		
 		// This is it. Every formula to be passed on to the next node must be here.
 		Set<StateFormula> next_formulas = union(next_literals,next_obligations);
@@ -109,9 +128,20 @@ public class FaultInjector {
 			);
 		
 		Set<StateFormula> new_forms = union(n.formulas, next_state_descriptor);
+		new_forms = new_forms
+				.stream()
+				.filter(x -> !(x instanceof Obligation || x instanceof DeonticProposition))
+				.collect(Collectors.toSet());
 		
 		AndNode ghost = new AndNode(new_forms);
 		Set<OrNode> faulty_succs = ghost.tiles();
+		faulty_succs.stream().forEach(o -> o.faulty = true);
+		/*faulty_succs.stream().forEach(
+				o -> o.formulas = o.formulas.stream().filter(
+						f -> !(f instanceof DeonticProposition || f instanceof Obligation)
+						)
+						.collect(Collectors.toSet())
+		);*/
 		
 		//assert faulty_succs.size() == 1;
 		

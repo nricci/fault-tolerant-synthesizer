@@ -101,7 +101,7 @@ public class Main {
 			
 			
 			// ALTERNATIVAS PARA FALLAS
-			int method = 4;
+			int method = 2;
 			Relation<AndNode,AndNode> rel = null;
 			
 			switch(method) {
@@ -196,6 +196,7 @@ public class Main {
 			
 			//t.to_dot("output/final_tableaux_rel.dot", Debug.node_render_min, rel);
 			t.to_dot("output/final_tableaux.dot", Debug.default_node_render);
+			t.to_dot("output/final_tableaux_elem.dot", Debug.node_render_elem);
 			t.to_dot_levels_of_tolerance("output/levels.dot", null, rel);
 			
 		

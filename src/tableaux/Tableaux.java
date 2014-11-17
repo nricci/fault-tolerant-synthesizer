@@ -225,13 +225,29 @@ public class Tableaux {
 		return predecesors(n, this.graph);
 	}
 	
-	
 	private Set<TableauxNode> predecesors(TableauxNode n, DirectedGraph<TableauxNode, DefaultEdge> graph) {
 		HashSet<TableauxNode> res = new HashSet<TableauxNode>();
 		for(DefaultEdge e : graph.incomingEdgesOf(n))
 			res.add(graph.getEdgeSource(e));
 		return res;
 	}
+	
+	public Set<AndNode> predecesors2(AndNode n) {
+		HashSet<OrNode> or_pre = new HashSet<OrNode>();
+		for(DefaultEdge e : graph.incomingEdgesOf(n))
+			or_pre.add((OrNode)graph.getEdgeSource(e));
+		
+		HashSet<AndNode> and_pre = new HashSet<AndNode>();
+		for(OrNode o : or_pre)
+			for(DefaultEdge e : graph.incomingEdgesOf(o))
+				and_pre.add((AndNode)graph.getEdgeSource(e));
+		return and_pre;
+	}
+	
+	
+	
+	
+	
 	
 	private <T> Set<T> frontier(DirectedGraph<T, DefaultEdge> g) {
 		HashSet<T> res = new HashSet<T>();

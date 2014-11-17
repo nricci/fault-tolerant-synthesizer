@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import tableaux.*;
 import util.*;
 import dctl.formulas.*;
+import static util.SetUtils.minus;
 
 public class FaultInjectorIII {
 	
@@ -64,28 +65,46 @@ public class FaultInjectorIII {
 	
 	private void guided_tableaux(OrNode generator, Set<AndNode> ipoints) {
 		LinkedList<TableauxNode> to_expand = new LinkedList<TableauxNode>();
-		to_expand.add(generator);
 		
+		
+		// We establish that the first generation of faulty nodes
+		// Are masked by the injection points.
+		List<?> l = _t.expand(generator, false);
+		l.removeAll(_t.flush());		
+		Set<AndNode> ands = l.stream().map(o -> (AndNode) o).collect(Collectors.toSet());
+				
+		for(AndNode a : ands)
+			for(AndNode i : ipoints)
+				_mask.put(a, i);
+		
+		to_expand.addAll(ands);
+				
 		while(!to_expand.isEmpty()) {
 			if(to_expand.peek() instanceof AndNode) {
 				AndNode n = (AndNode) to_expand.poll();
-				
-				
-			
-			
+				to_expand.addAll(_t.expand(n));			
 			} else if (to_expand.peek() instanceof OrNode) {
 				OrNode n = (OrNode) to_expand.poll();
 				
 				// Tableaux expansion and remotion of any potentially
 				// inconsistent nodes.
-				List<?> l = _t.expand(n, false);
-				Set<AndNode> ands = l.stream().map(o -> (AndNode) o).collect(Collectors.toSet());
-				ands = minus(ands,_t.flush());
+				l = _t.expand(generator, false);
+				l.removeAll(_t.flush());		
+				ands = l.stream().map(o -> (AndNode) o).collect(Collectors.toSet());
+				
+				for(AndNode a : ands) {
+					Set<>_t.predecesors2(a);
+					
+					
+					
+					
+				}
 				
 				
 				
 				
 				
+				to_expand.addAll(ands);
 			} else 
 				assert false : "Should not get here";
 					
@@ -203,7 +222,7 @@ public class FaultInjectorIII {
 		
 		AndNode ghost = new AndNode(new_forms);
 		Set<OrNode> faulty_succs = ghost.tiles();
-		
+		faulty_succs.stream().forEach(o -> o.faulty = true);
 		//assert faulty_succs.size() == 1;
 		
 		Set<OrNode> res = new HashSet<>();
