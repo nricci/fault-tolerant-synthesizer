@@ -303,7 +303,7 @@ public class Tableaux {
 				.isPresent()) 
 		{
 			res.addAll(expand(deontic_filter));
-			//System.out.println("*");
+			System.out.println("*");
 			
 			//System.out.println("[do_tableau] step : " + step++);
 			/*Debug.to_file(
@@ -403,6 +403,8 @@ public class Tableaux {
 		if(_succs.isEmpty())
 			to_delete.add(n);
 		
+		//_succs = _succs.stream().filter(s -> is_consistent(s)).collect(Collectors.toSet());
+		
 		_nodes = _succs.stream().map(s -> new AndNode(s)).collect(Collectors.toSet());
 		
 		/*for(Set<StateFormula> s : _succs) {
@@ -425,7 +427,7 @@ public class Tableaux {
 		}*/
 
 		if(debug) System.out.println("_nodes : " + _nodes);
-		if(deontic_filter) {
+		/*if(deontic_filter) {
 			// Filtrado de nodos fallidos que sean relizables sin fallas.
 			// Las fallas son insertadas posteriormente en fault injection
 			Set<AndNode> _nodes_deontic_filter = new HashSet<AndNode>();
@@ -448,9 +450,10 @@ public class Tableaux {
 			_nodes = _nodes_deontic_filter;
 			//System.out.println("_nodes : " + _nodes);
 		}
-		
+		*/
 		
 		// Cociente modulo formulas elementary.
+		/*
 		Set<AndNode> _nodes_elementary_filter = new HashSet<AndNode>();
 		Function<AndNode,Set<StateFormula>> elem_flas = ((AndNode node) -> 
 			node.formulas
@@ -468,6 +471,7 @@ public class Tableaux {
 		}
 		if(debug) System.out.println(_nodes.size() - _nodes_elementary_filter.size() + " elem-equivalent nodes filtered.");
 		_nodes = _nodes_elementary_filter;
+		*/
 		
 		
 		for(AndNode _m : _nodes) {
@@ -1427,6 +1431,10 @@ public class Tableaux {
 				.collect(Collectors.toSet());
 	}
 	
+	public Set<AndNode> post(AndNode n) {
+		return union(postN(n), postF(n));
+	}
+	
 	public Set<AndNode> postN(AndNode n) {
 		return succesors(n, graph)
 				.stream()
@@ -2098,7 +2106,7 @@ public class Tableaux {
 		}
 		
 		for(Pair<AndNode,AndNode> p : nmask) {
-			res += map.get(p.first) + "->" + map.get(p.second) + " [color=red];\n";
+			res += map.get(p.second) + "->" + map.get(p.first) + " [color=red];\n";
 		}
 		
 		res += "}";		

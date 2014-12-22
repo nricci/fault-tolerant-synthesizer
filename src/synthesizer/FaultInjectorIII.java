@@ -53,75 +53,156 @@ public class FaultInjectorIII {
 		int loop = 0;
 		for(OrNode gen : gens_to_ipoints.domain()) {
 			_t.to_dot("output/gtab/" + loop + "_pre.dot", Debug.default_node_render, _mask);
-			guided_tableaux(gen, gens_to_ipoints.get(gen));			
+			guided_tableaux(gen, gens_to_ipoints.get(gen));		
 			_t.to_dot("output/gtab/" + loop + "_post.dot", Debug.default_node_render, _mask);
 			loop++;
 		}
 		
+		System.out.println("check mask : " + check_mask());
 		return _mask;
 	}
 	
+
 	
-	
-	private void guided_tableaux(OrNode generator, Set<AndNode> ipoints) {
-		LinkedList<TableauxNode> to_expand = new LinkedList<TableauxNode>();
+	private void guided_tableaux(OrNode o, Set<AndNode> masks) {
+		LinkedList<AndNode> ands = new LinkedList<>();
+		LinkedList<OrNode> ors = new LinkedList<>();
 		
+		ands.addAll(expandOR(o));
 		
-		// We establish that the first generation of faulty nodes
-		// Are masked by the injection points.
-		List<?> l = _t.expand(generator, false);
-		l.removeAll(_t.flush());		
-		Set<AndNode> ands = l.stream().map(o -> (AndNode) o).collect(Collectors.toSet());
+		for(AndNode m : masks)
+			for(AndNode a : ands)
+				if(_t.sublabeling(m).equals(_t.sublabeling(a)))
+					_mask.put(m, a);
 				
-		for(AndNode a : ands)
-			for(AndNode i : ipoints)
-				_mask.put(a, i);
-		
-		to_expand.addAll(ands);
-				
-		while(!to_expand.isEmpty()) {
-			if(to_expand.peek() instanceof AndNode) {
-				AndNode n = (AndNode) to_expand.poll();
-				to_expand.addAll(_t.expand(n));			
-			} else if (to_expand.peek() instanceof OrNode) {
-				OrNode n = (OrNode) to_expand.poll();
-				
-				// Tableaux expansion and remotion of any potentially
-				// inconsistent nodes.
-				l = _t.expand(generator, false);
-				l.removeAll(_t.flush());		
-				ands = l.stream().map(o -> (AndNode) o).collect(Collectors.toSet());
-				
-				for(AndNode a : ands) {
-					Set<>_t.predecesors2(a);
-					
-					
-					
-					
-				}
-				
-				
-				
-				
-				
-				to_expand.addAll(ands);
-			} else 
-				assert false : "Should not get here";
-					
+		while(!ands.isEmpty()) {
+			ors.addAll(expandAND(ands.pop()));
 		}
 		
+		while(!ors.isEmpty()) {
+			OrNode _o = ors.pop();
+			
+			Set<AndNode> new_masks = new HashSet<>();
+			new_masks.addAll(_mask.stream()
+					.filter(p -> _t.predecesors(_o).contains(p.second))
+					.map(p -> p.first)
+					.collect(Collectors.toSet())
+					);
+			
+			Set<AndNode> aux = new_masks
+					.stream()
+					.map(a -> _t.postN(a))
+					.reduce(make_set(),SetUtils::union);
+			new_masks.addAll(aux);
+			
+			
+			guided_tableaux(_o,new_masks);
+		}
 		
+	}
+	
+	private Set<AndNode> expandOR(OrNode o) {
+		List<TableauxNode> l = _t.expand(o, false);
+		l.removeAll(_t.flush());
+		_t.delete_inconsistent();
+		l = identify_redundancies(_t, l);
+		l.retainAll(_t.frontier());
+		Set<AndNode> ands = l.stream().map(x -> (AndNode) x).collect(Collectors.toSet());
 		
+		return ands;
+	}
+	
+	
+	private Set<OrNode> expandAND(AndNode a) {
+		Set<OrNode> res = new HashSet<OrNode>();
+		for(TableauxNode t : _t.expand(a))
+			if(t instanceof OrNode)
+				res.add((OrNode) t);
+			else
+				assert false;
 		
+		res.retainAll(_t.frontier());
+		return res;		
 	}
 	
 	
 	
 	
 	
+	private List<TableauxNode> identify_redundancies(Tableaux t, List<TableauxNode> ands) {
+		List<TableauxNode> res = new LinkedList<>();
+		res.addAll(ands);
+		for(TableauxNode n : ands) {
+			if(!(n instanceof AndNode)) continue;
+			Set<StateFormula> oblit = n.formulas
+					.stream()
+					.filter(f -> f instanceof DeonticProposition)
+					.map(f -> (DeonticProposition) f)
+					.map(ob -> ob.get_prop())
+					.collect(Collectors.toSet());
+			if(!DCTLUtils.is_consistent(oblit)) {
+				_t.delete_node(n);
+				res.remove(n);
+			}
+			
+		}
+		return res;
+	}
 	
 	
 	
+	/*	Methods for checking validity of the
+	 *	masking relation.
+	 * 
+	*/
+	
+	private boolean check_mask() {
+		
+		for(Pair<AndNode, AndNode> p : _mask) {
+			AndNode s1 = p.first;
+			AndNode s2 = p.second;
+			
+			// Condition 1 : labelings
+			if(!_t.sublabeling(s1).equals(_t.sublabeling(s2)))
+				return false;
+			
+			// Condition 2
+			for(AndNode _s1 : _t.postN(s1)) {
+				boolean r = false;
+				for(AndNode _s2 : _t.post(s2)) {
+					if(_mask.contains(new Pair(_s1,_s2)))
+						r = true;
+				}	
+				if(!r)
+					return false; 
+				
+			}
+			
+			// Condition 3
+			for(AndNode _s2 : _t.postN(s2)) {
+				boolean r = false;
+				for(AndNode _s1 : _t.postN(s1)) {
+					if(_mask.contains(new Pair(_s1,_s2)))
+						r = true;
+				}
+				if(!r)
+					return false;
+			}
+			
+			// Condition 4
+			for(AndNode _s2 : _t.postF(s2)) {
+				boolean r = false;
+				for(AndNode _s1 : _t.postN(s1)) {
+					if(_mask.contains(new Pair(_s1,_s2)))
+						r = true;
+				}	
+				if(!r && !_mask.contains(new Pair(s1,_s2)))
+					return false; 
+			}
+			
+		}		
+		return true;
+	}
 	
 	
 	
@@ -140,11 +221,13 @@ public class FaultInjectorIII {
 	 * 	normal nodes.
 	*/	
 	private void initialize_mask() {
-		_mask = new Relation<>();
+		/*_mask = new Relation<>();
 		
 		for(AndNode n : _t.normal_nodes()) {
 			_mask.put(n, n);
-		}		
+		}*/
+		
+		_mask = new MaskingCalculator(_t).compute();
 	}
 	
 	
@@ -206,7 +289,7 @@ public class FaultInjectorIII {
 				.collect(Collectors.toSet());
 		
 		// Override!!!
-		next_obligations = make_set();
+		//next_obligations = make_set();
 		
 		// This is it. Every formula to be passed on to the next node must be here.
 		Set<StateFormula> next_formulas = union(next_literals,next_obligations);
@@ -231,7 +314,7 @@ public class FaultInjectorIII {
 			_t.add_edge(n,f);//.get_graph().addEdge(n, f);
 		}
 		
-		return res.stream().map(o_node -> new Pair(o_node,n)).collect(Collectors.toSet());
+		return res.stream().map(o_node -> new Pair<OrNode,AndNode>(o_node,n)).collect(Collectors.toSet());
 	}
 	
 	// Gets the next pair of (Node,Obligation) that is suitable for fault injection 

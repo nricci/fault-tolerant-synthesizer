@@ -1,0 +1,88 @@
+/* Byzantine Agreement: one General 'g' and three lieutenants: l1, l2, l3. 
+   
+We have the following variables for each lieutenants:
+   Let l1 be a lieutenants: 
+ 	- l1_b: lieutenants is bizantine
+	- l1_lj: lieutenants lj (j=2 and j=3) has forwarded the order of attack to l1
+	- l1_ga: lieutenants has received the order of attack from the general g
+	- l1_d: lieutenants l1 has decided to attack based on the messaged received from the lieutenants and general
+ 	- r0, r1: round 0 (1) of messages, respectively
+	- reset: variable used to simulated that the system is reseted to start a new round of messages
+	- g_a: the general g wants to attach the enemy
+ */
+
+--Interface
+l1_d, l2_d, l3_d;
+
+--InitialState
+
+/* Initial State: the three lieutenants are not byzantine and the General g has decided to attack. */
+
+!l1_b && !l2_b && !l3_b && g_a && !g_b && r0;
+
+--Specification
+
+/* The general in round 0 sends the message of attack to the lieutenants l1, l2, l3 */
+
+AG( (g_a && r0) -> AX ( (r1 && l1_ga && l2_ga && l3_ga && g_a && !g_b && !l1_b && !l2_b && !l3_b) ));
+
+/* Each non-byzantine lieutenant forwards the message of attack to the other lieutenants in round 1 */
+
+AG( (l1_ga && !l1_b && r1) -> AX ( (reset && l2_l1a && l3_l1a && l1_ga && g_a && !g_b && !l1_b && !l2_b && !l3_b) ));
+
+AG( (l2_ga && !l2_b && r1) -> AX ( (reset && l1_l2a && l3_l2a && l2_ga && g_a && !g_b && !l1_b && !l2_b && !l3_b) ));
+
+AG( (l3_ga && !l3_b && r1) -> AX ( (reset && l1_l3a && l2_l3a && l3_ga && g_a && !g_b && !l1_b && !l2_b && !l3_b) ));
+
+
+/* After the final round m+1 is reached (m is the number of traitors or byzantine allowed), the system is reseted. */
+
+AG( reset -> AX ( (!l1_b && !l2_b && !l3_b && g_a && !g_b && r0) ));
+
+
+/* Each lieutenant l_j decides to attack if it has received at least two messages of attack coming from the other two lieutenants and the general. */
+
+AG( l1_d <-> ( (l1_ga && l1_l2a && l1_l3a) || (l1_ga && l1_l2a) || (l1_ga && l1_l3a) ));
+
+AG( l2_d <-> ( (l2_ga && l2_l1a && l2_l3a) || (l2_ga && l2_l1a) || (l2_ga && l2_l3a) ));
+
+AG( l3_d <-> ( (l3_ga && l3_l1a && l3_l2a) || (l3_ga && l3_l1a) || (l3_ga && l3_l2a) ));
+
+/* The systems has been reseted iff the general has took its decision */
+AG (reset <-> g_d);
+
+
+/* A safety property of the system: the three lieutenants are not byzantine (or traitors). */
+
+OG(!l1_b && !l2_b && !l3_b);
+
+/* Validity: if the General 'g' is not Byzantine, then the final decision 
+	     of the lieutenants must be the same as that of the general 'g' */
+
+OG( (!g_b && reset) -> (g_d && l1_d && l2_d && l3_d ) );
+
+/* Agreement: the final decision of any 2 non-Bizantine lieutenants must be equal */
+
+AG( ((!l1_b && !l2_b) -> (l1_d && l2_d)) && 
+   ((!l1_b && !l3_b) -> (l1_d && l3_d)) &&
+   ((!l2_b && !l3_b) -> (l2_d && l3_d)) );
+
+
+
+/* If lieutenant is byzantine, then it means that forwards the message of not attack to the other lieutenants */
+
+AG( l1_b <-> !l2_l1a );
+
+AG( l1_b <-> !l3_l1a );
+
+AG( l2_b <-> !l1_l2a );
+
+AG( l2_b <-> !l3_l2a );
+
+AG( l3_b <-> !l1_l3a );
+
+AG( l3_b <-> !l2_l3a );
+
+
+
+

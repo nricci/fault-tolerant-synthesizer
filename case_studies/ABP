@@ -1,0 +1,17 @@
+--Interface
+
+on;
+
+--InitialState
+
+True;
+
+--Specification
+
+AG(w_ack0 -> s_msg0);
+AG(w_ack0 && ack0 -> AX(w_ack1));
+
+AG(w_ack1 -> s_msg1);
+AG(w_ack1 && ack1 -> AX(w_ack0));
+
+

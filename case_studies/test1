@@ -4,16 +4,10 @@ a,b;
 
 --InitialState
 
-a && b && EX(!a) && EX(!b);
+a && b;
 
 --Specification
 
-AG(a||b);
+OG(a || b);
 
-AG(!b -> EX(a));
-
-AG(!a -> EX(b));
-
-AG(b -> EX(!a));
-
-AG(a -> EX(!b));
+AG(EX(True));

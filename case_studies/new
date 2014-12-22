@@ -8,7 +8,10 @@ True;
 
 --Specification
 
-AG(!on <-> AX(on));
+AG(a1 || b1 || c1 || d1 );
 
-AG(on <-> AX(!on));
+AG(a2 || b2 || c2 || d2 );
 
+AG(a3 || b3 || c3 || d3 );
+
+AG(a4 || b4 || c4 || d4 );

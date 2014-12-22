@@ -4,7 +4,9 @@ r;
 
 --InitialState
 
-(c0 && c1 && c2) || (!c0 && !c1 && !c2);
+/*(c0 && c1 && c2) || (!c0 && !c1 && !c2);*/
+
+True;
 
 --Specification
 

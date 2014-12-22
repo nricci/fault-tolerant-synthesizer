@@ -18,8 +18,6 @@ import org.jgrapht.ext.EdgeNameProvider;
 import org.jgrapht.ext.VertexNameProvider;
 import org.jgrapht.graph.DefaultEdge;
 
-import com.sun.corba.se.spi.ior.MakeImmutable;
-
 import synthesizer.*;
 import parser.Parser;
 import tableaux.AndNode;
@@ -55,7 +53,8 @@ public class Main {
 					System.out.print("End of Execution. ");
 					try {
 						System.out.print("Calling dot2jpeg.sh...\n");
-						Runtime.getRuntime().exec("./dot2jpeg.sh");
+						//Runtime.getRuntime().exec("./dot2jpeg.sh");
+						Runtime.getRuntime().exec("echo hola");
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -99,9 +98,8 @@ public class Main {
 			t.commit();		
 
 			
-			
 			// ALTERNATIVAS PARA FALLAS
-			int method = 2;
+			int method = Integer.parseInt(args[1]);
 			Relation<AndNode,AndNode> rel = null;
 			
 			switch(method) {
@@ -166,9 +164,10 @@ public class Main {
 				
 				System.out.print("[fault-injection (TryIV)] ... ");
 				
-				t.to_dot("output/pre_faults.dot", Debug.default_node_render);
-				rel = new FaultInjectorIII(t).inject_faults();
-				t.to_dot("output/pos_faults.dot", Debug.default_node_render,rel);
+				t.to_dot("output/pre_faults.dot", Debug.node_render_elem);
+				FaultInjectorIII ff = new FaultInjectorIII(t);
+				rel = ff.inject_faults();
+				t.to_dot("output/pos_faults.dot", Debug.node_render_elem,rel);
 				
 				System.out.println("done.");
 				System.out.print("[non-masking relation] ... ");
@@ -189,14 +188,16 @@ public class Main {
 			break;
 			
 			default:
-				assert false;	
+				assert false : "no such method (" + method + ")";	
 			}
 			
 			assert rel != null;
 			
+			
+			
 			//t.to_dot("output/final_tableaux_rel.dot", Debug.node_render_min, rel);
 			t.to_dot("output/final_tableaux.dot", Debug.default_node_render);
-			t.to_dot("output/final_tableaux_elem.dot", Debug.node_render_elem);
+			t.to_dot("output/final_tableaux_elem.dot", Debug.node_render_elem, rel);
 			t.to_dot_levels_of_tolerance("output/levels.dot", null, rel);
 			
 		

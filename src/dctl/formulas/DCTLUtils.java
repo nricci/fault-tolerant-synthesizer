@@ -58,7 +58,11 @@ public class DCTLUtils {
 	}
 	
 	public static Set<Set<StateFormula>> closure(Set<StateFormula> set) {
-		return closure_impl_2(set);
+		System.out.println("set : \n"); 
+		set.stream().forEach(x -> System.out.println(x));
+		
+		Set<Set<StateFormula>> res = closure_impl_2(set);
+		return res;
 	}
 	
 	
@@ -103,7 +107,7 @@ public class DCTLUtils {
 	@SuppressWarnings("unchecked")
 	private static Set<Set<StateFormula>> closure_impl_2(Set<StateFormula> set) {
 		assert(set != null);
-		boolean debug = false;
+		boolean debug = true;
 		
 		Tree<Set<StateFormula>> decomp = new Tree(set);
 		LinkedList<Tree<Set<StateFormula>>> frontier = new LinkedList();
@@ -163,12 +167,13 @@ public class DCTLUtils {
 			}
 		}
 		
-		if(debug) System.out.println("closure exit... flattening tree.");
+		if(debug) System.out.println("closure exit... flattening tree. "
+				+ "inconcistencies: " + inconsistencies);
 		return flatten(decomp);
 	}
 	
 	private static Set<Set<StateFormula>> flatten(Tree<Set<StateFormula>> t) {
-		boolean debug = false;
+		boolean debug = true;
 		
 		LinkedList<Tree<Set<StateFormula>>> trees = new LinkedList<Tree<Set<StateFormula>>>();
 		Set<Set<StateFormula>> res = new HashSet<Set<StateFormula>>();
@@ -195,7 +200,7 @@ public class DCTLUtils {
 			}			
 		}
 		
-		if(debug) System.out.println("flattening ended.");
+		if(debug) System.out.println("flattening ended. result size: " + res.size());
 		return res;
 	}
 	
