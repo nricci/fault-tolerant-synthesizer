@@ -60,12 +60,19 @@ public final class Negation extends PropositionalFormula implements UnaryExpr {
 		return "!" + arg().toString();
 	}
 
+	private Integer hash_code = null;
+	
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((_arg == null) ? 0 : _arg.hashCode());
-		return result;
+		if(hash_code == null) {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((_arg == null) ? 0 : _arg.hashCode());
+			hash_code = result;
+			return result;
+		} else {
+			return hash_code;
+		}
 	}
 
 	@Override

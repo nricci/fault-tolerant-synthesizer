@@ -54,14 +54,20 @@ public final class Or extends PropositionalFormula implements BinaryExpr {
 		return arg_left().toString() + "||" + arg_right().toString();
 	}
 
+	private Integer hash_code = null;
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((_left == null) ? 0 : _left.hashCode());
-		result = prime * result + ((_right == null) ? 0 : _right.hashCode());
-		return result;
+		if(hash_code == null) {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((_left == null) ? 0 : _left.hashCode());
+			result = prime * result + ((_right == null) ? 0 : _right.hashCode());
+			hash_code = result;
+			return result;
+		} else {
+			return hash_code;
+		}
 	}
 
 

@@ -38,6 +38,18 @@ public class Tree<E> {
 	
 	public E val() {return this.value;}
 	
+	public int height() {
+		int a = this.left == null?0:left.height();
+		int b = this.right == null?0:right.height();
+		return 1 + Integer.max(a, b);
+	}
+	
+	public int size() {
+		int a = this.left == null?0:left.size();
+		int b = this.right == null?0:right.size();
+		return 1 + a + b;
+	}
+	
 	public void printInOrder(){
 		if (this!=null && this.value != null) {                  
 			if (this.left != null)
