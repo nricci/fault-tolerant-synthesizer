@@ -61,27 +61,25 @@ public class Main {
 	            }  
 			});
 			
+			
+			
+			
+			
+			
 			long start_time = System.currentTimeMillis();
 			
 			// Parsing
 			Specification s = Parser.parse_specification(args[0]);
-			//System.out.println("specification:\n\n" + s.toString());
-			
-			
-			
+					
 			// Tableaux
 			Tableaux t = new Tableaux(s);
 			t.do_tableau(true);
 			
-			
-			
-			//t.to_dot("output/tableaux.dot", Debug.default_node_render);
-			System.out.println("tableau finished: " +  t.get_graph().vertexSet().size() + " nodes, "
+			System.out.println("tableau finished: " 
+					+ t.get_graph().vertexSet().size() + " nodes, "
 					+ t.get_graph().edgeSet().size() + " edges.");
 			
 			assert t.root != null;
-			
-			
 			
 			// Deletion
 			int changes = new DeletionRules(t).apply().size();
@@ -92,12 +90,13 @@ public class Main {
 				return;
 			}
 
-			//t.to_dot("output/tableaux_after_delete.dot", Debug.default_node_render);
-			System.out.println("tableau after delete: " +  t.get_graph().vertexSet().size() + " nodes, "
+			System.out.println("tableau after delete: "
+					+ t.get_graph().vertexSet().size() + " nodes, "
 					+ t.get_graph().edgeSet().size() + " edges.");
 			
 			assert t.root != null;
-			t.commit();		
+	
+			t.to_dot("output/tableaux.dot", Debug.default_node_render);
 
 			
 			// ALTERNATIVAS PARA FALLAS
@@ -105,17 +104,6 @@ public class Main {
 			Relation<AndNode,AndNode> rel = null;
 			
 			switch(method) {
-			case 1:
-				// ON THE FLY ORIGINAL
-				
-				System.out.print("[fault-injection (original)] ... ");
-				t.inject_faults();
-				System.out.println("done.");
-				System.out.print("[non-masking relation] ... ");
-				rel =  t.masking_relation;
-				System.out.println("Untollerated Fault : " + t.nonmasking_faults);
-				System.out.println("done.");
-			break;
 			case 2:
 				// EL QUE FUNCA
 				
