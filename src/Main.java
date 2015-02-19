@@ -53,8 +53,8 @@ public class Main {
 					System.out.print("End of Execution. ");
 					try {
 						System.out.print("Calling dot2jpeg.sh...\n");
-						//Runtime.getRuntime().exec("./dot2jpeg.sh");
-						Runtime.getRuntime().exec("echo hola");
+						Runtime.getRuntime().exec("./dot2jpeg.sh");
+						//Runtime.getRuntime().exec("echo hola");
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -73,7 +73,7 @@ public class Main {
 			Tableaux t = new Tableaux(s);
 			t.do_tableau(true);
 			
-			if(2+2==4) return; 
+			
 			
 			//t.to_dot("output/tableaux.dot", Debug.default_node_render);
 			System.out.println("tableau finished: " +  t.get_graph().vertexSet().size() + " nodes, "

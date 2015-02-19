@@ -58,14 +58,7 @@ public class DCTLUtils {
 	}
 	
 	public static Set<Set<StateFormula>> closure(Set<StateFormula> set) {
-		System.out.println("set : \n"); 
-		set.stream().forEach(x -> System.out.println(x));
-		
-		Set<Set<StateFormula>> res = Closure.closure(set);//closure_impl_2(set);
-		
-		System.out.println("res : \n"); 
-		res.stream().forEach(x -> System.out.println(x));
-		return res;
+		return Closure.closure(set);
 	}
 	
 	

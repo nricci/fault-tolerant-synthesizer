@@ -303,7 +303,6 @@ public class Tableaux {
 				.isPresent()) 
 		{
 			res.addAll(expand(deontic_filter));
-			System.out.println("*");
 			
 			//System.out.println("[do_tableau] step : " + step++);
 			/*Debug.to_file(
@@ -427,7 +426,7 @@ public class Tableaux {
 		}*/
 
 		if(debug) System.out.println("_nodes : " + _nodes);
-		/*if(deontic_filter) {
+		if(deontic_filter) {
 			// Filtrado de nodos fallidos que sean relizables sin fallas.
 			// Las fallas son insertadas posteriormente en fault injection
 			Set<AndNode> _nodes_deontic_filter = new HashSet<AndNode>();
@@ -450,10 +449,10 @@ public class Tableaux {
 			_nodes = _nodes_deontic_filter;
 			//System.out.println("_nodes : " + _nodes);
 		}
-		*/
+		
 		
 		// Cociente modulo formulas elementary.
-		/*
+		
 		Set<AndNode> _nodes_elementary_filter = new HashSet<AndNode>();
 		Function<AndNode,Set<StateFormula>> elem_flas = ((AndNode node) -> 
 			node.formulas
@@ -471,7 +470,7 @@ public class Tableaux {
 		}
 		if(debug) System.out.println(_nodes.size() - _nodes_elementary_filter.size() + " elem-equivalent nodes filtered.");
 		_nodes = _nodes_elementary_filter;
-		*/
+		
 		
 		
 		for(AndNode _m : _nodes) {
