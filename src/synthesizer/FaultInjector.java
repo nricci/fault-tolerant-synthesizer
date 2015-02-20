@@ -49,7 +49,7 @@ public class FaultInjector {
 			identify_redundancies(_t,and_nodes);
 			
 			
-			int deletions = _t.delete_inconsistent();
+			int deletions = new DeletionRules(_t).apply().size();
 			
 			//System.out.print(p +"\t\t "+ or_nodes +"\t\t "+ and_nodes +"\t\t "+ deletions+"\n");			
 		}

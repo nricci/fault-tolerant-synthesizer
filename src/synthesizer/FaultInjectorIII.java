@@ -41,7 +41,7 @@ public class FaultInjectorIII {
 	/*	Public API
 	*/
 
-	public Relation<AndNode,AndNode> inject_faults() {
+	public Relation<AndNode,AndNode> run() {
 		initialize_mask();
 		Set<Pair<OrNode, AndNode>> gens = inject_generators();
 		
@@ -52,9 +52,9 @@ public class FaultInjectorIII {
 		
 		int loop = 0;
 		for(OrNode gen : gens_to_ipoints.domain()) {
-			_t.to_dot("output/gtab/" + loop + "_pre.dot", Debug.default_node_render, _mask);
+			_t.to_dot("output/gtab/" + loop + "_pre.dot", Debug.node_render_min, _mask);
 			guided_tableaux(gen, gens_to_ipoints.get(gen));		
-			_t.to_dot("output/gtab/" + loop + "_post.dot", Debug.default_node_render, _mask);
+			_t.to_dot("output/gtab/" + loop + "_post.dot", Debug.node_render_min, _mask);
 			loop++;
 		}
 		
@@ -104,7 +104,7 @@ public class FaultInjectorIII {
 	private Set<AndNode> expandOR(OrNode o) {
 		List<TableauxNode> l = _t.expand(o, false);
 		l.removeAll(_t.flush());
-		_t.delete_inconsistent();
+		//new DeletionRules(_t).apply();
 		l = identify_redundancies(_t, l);
 		l.retainAll(_t.frontier());
 		Set<AndNode> ands = l.stream().map(x -> (AndNode) x).collect(Collectors.toSet());
@@ -317,7 +317,8 @@ public class FaultInjectorIII {
 		return res.stream().map(o_node -> new Pair<OrNode,AndNode>(o_node,n)).collect(Collectors.toSet());
 	}
 	
-	// Gets the next pair of (Node,Obligation) that is suitable for fault injection 
+	// Gets the next pair of (AndNode,ObligationFormula) that is suitable
+	// for fault injection. That is: the node  
 	private Pair<AndNode,DeonticProposition> get_fault_injection_point() {
 		for(TableauxNode n : _t.get_graph().vertexSet()) {
 			if(n instanceof AndNode) {

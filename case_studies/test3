@@ -1,12 +1,12 @@
 --Interface
 
-r;
+val;
 
 --InitialState
 
-/*(c0 && c1 && c2) || (!c0 && !c1 && !c2);*/
+(c0 && c1 && c2 && out) || (!c0 && !c1 && !c2 && !out);
 
-True;
+
 
 --Specification
 
@@ -18,6 +18,9 @@ AG(
 	(c2 || !c2)
 );
 
-AG( r <-> ((c0 && c1 ) || (c0 && c2) || (c1 && c2) || (c0 && c1 && c2)));
+AG(val <-> ((c0 && c1 ) || (c0 && c2) || (c1 && c2) || (c0 && c1 && c2)));
 
-AG( !r <-> ((!c0 && !c1 ) || (!c0 && !c2) || (!c1 && !c2) || (!c0 && !c1 && !c2)));
+AG(EX(c0 && c1 && c2 && val && out));
+
+AG(EX(!c0 && !c1 && !c2 && !val && !out));
+

@@ -97,6 +97,8 @@ public class Main {
 			assert t.root != null;
 	
 			t.to_dot("output/tableaux.dot", Debug.default_node_render);
+			t.to_dot("output/tableaux_min.dot", Debug.node_render_min);
+			
 
 			
 			// ALTERNATIVAS PARA FALLAS
@@ -156,7 +158,7 @@ public class Main {
 				
 				t.to_dot("output/pre_faults.dot", Debug.node_render_elem);
 				FaultInjectorIII ff = new FaultInjectorIII(t);
-				rel = ff.inject_faults();
+				rel = ff.run();
 				t.to_dot("output/pos_faults.dot", Debug.node_render_elem,rel);
 				
 				System.out.println("done.");
@@ -184,8 +186,6 @@ public class Main {
 			assert rel != null;
 			
 			
-			
-			//t.to_dot("output/final_tableaux_rel.dot", Debug.node_render_min, rel);
 			t.to_dot("output/final_tableaux.dot", Debug.default_node_render);
 			t.to_dot("output/final_tableaux_elem.dot", Debug.node_render_elem, rel);
 			t.to_dot_levels_of_tolerance("output/levels.dot", null, rel);
