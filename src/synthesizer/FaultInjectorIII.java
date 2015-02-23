@@ -52,11 +52,12 @@ public class FaultInjectorIII {
 		
 		int loop = 0;
 		for(OrNode gen : gens_to_ipoints.domain()) {
-			_t.to_dot("output/gtab/" + loop + "_pre.dot", Debug.node_render_min, _mask);
+			_t.to_dot("output/gtab/" + loop + "_pre.dot", Debug.full_node_render, _mask);
 			guided_tableaux(gen, gens_to_ipoints.get(gen));		
-			_t.to_dot("output/gtab/" + loop + "_post.dot", Debug.node_render_min, _mask);
+			_t.to_dot("output/gtab/" + loop + "_post.dot", Debug.full_node_render, _mask);
 			loop++;
 		}
+		
 		
 		System.out.println("check mask : " + check_mask());
 		return _mask;

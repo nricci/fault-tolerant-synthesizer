@@ -4,7 +4,7 @@ val;
 
 --InitialState
 
-(c0 && c1 && c2 && out) || (!c0 && !c1 && !c2 && !out);
+(c0 && c1 && c2) || (!c0 && !c1 && !c2);
 
 
 
@@ -20,7 +20,7 @@ AG(
 
 AG(val <-> ((c0 && c1 ) || (c0 && c2) || (c1 && c2) || (c0 && c1 && c2)));
 
-AG(EX(c0 && c1 && c2 && val && out));
+AG(EX(c0 && c1 && c2 && val));
 
-AG(EX(!c0 && !c1 && !c2 && !val && !out));
+AG(EX(!c0 && !c1 && !c2 && !val));
 

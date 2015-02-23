@@ -154,7 +154,7 @@ public class Main {
 			case 4:
 				// Masking y nomask por iteraciones
 				
-				System.out.print("[fault-injection (TryIV)] ... ");
+				System.out.print("[fault-injection] ... ");
 				
 				t.to_dot("output/pre_faults.dot", Debug.node_render_elem);
 				FaultInjectorIII ff = new FaultInjectorIII(t);
@@ -169,8 +169,8 @@ public class Main {
 					if (n instanceof AndNode && n.faulty) {
 						Set<?> set = rel
 								.stream()
-								.filter(p -> p.first.equals(n))
-								.map(p -> p.second)
+								.filter(p -> p.second.equals(n))
+								.map(p -> p.first)
 								.filter(x -> !x.faulty)
 								.collect(Collectors.toSet());
 						if(set.isEmpty())
