@@ -1,218 +1,258 @@
 package synthesizer;
 
 import static dctl.formulas.DCTLUtils.prop_sat;
-import static util.SetUtils.intersection;
 import static util.SetUtils.make_set;
-import static util.SetUtils.minus;
 import static util.SetUtils.union;
+import static util.SetUtils.minus;
 
-import java.util.HashMap;
+
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import dctl.formulas.And;
-import dctl.formulas.DeonticProposition;
-import dctl.formulas.Exists;
-import dctl.formulas.False;
-import dctl.formulas.Negation;
-import dctl.formulas.Next;
-import dctl.formulas.Or;
-import dctl.formulas.Proposition;
-import dctl.formulas.StateFormula;
-import dctl.formulas.True;
-import tableaux.AndNode;
-import tableaux.OrNode;
-import tableaux.Tableaux;
-import tableaux.TableauxNode;
-import util.Debug;
-import util.Pair;
-import util.Relation;
-import util.SetUtils;
+import tableaux.*;
+import util.*;
+import dctl.formulas.*;
+import static util.SetUtils.minus;
+import static util.SetUtils.times;
+import static util.SetUtils.lift;
+import static util.SetUtils.intersection;
+
 
 public class FaultInjectorII {
 	
+	/*	Attributes 
+	*/
+	
 	private Tableaux _t;
 	
-	private Set<Pair> injected_faults;
+	private Set<Pair<AndNode,DeonticProposition>> _injected_faults;
+	
+	private LinkedList<Pair<AndNode,DeonticProposition>> _injection_stack;
+	
+	private Relation<AndNode,AndNode> _mask;
+	
+	
+	/*	Constructor
+	*/
 	
 	public FaultInjectorII(Tableaux t) {
-		_t = t;
-		injected_faults = new HashSet<Pair>();
+		this._t = t;
+		this._injected_faults = new HashSet<>();
+		this._injection_stack = new LinkedList<Pair<AndNode,DeonticProposition>>();
 	}
+	
+	
+	/*	Public API
+	*/
 
-	public Relation<AndNode,AndNode> inject_faults() {
-		boolean debug = true;
+	public Relation<AndNode,AndNode> run() {
+		initialize_mask();
+	
+		_injection_stack.addAll(get_injection_points(_t.normal_nodes()));		
 		
-		// Injected Faults
-		Set<Pair<AndNode,DeonticProposition>> injected_faults = new HashSet<>();
-		// Pending Faults
-		Set<Pair<AndNode,DeonticProposition>> pending_faults = 
-				minus(detect_fault_injection_points(),injected_faults);
-		// Masking Relation
-		Relation<AndNode,AndNode> masked_by = new MaskingCalculator(_t).compute();
-		// Nonmasking Faults
-		Set<AndNode> nonmasking_faults = new HashSet<>();
-		// Faults injected in a given step
-		Set<OrNode> fault_generators;
+		int loop = 1;
+		while(!_injection_stack.isEmpty()) {
+			int inner = 0;
+			
+			// DEBUG
+			System.out.println();
+			System.out.println("loop " + loop);
+			//System.out.println("injection stack = " + _injection_stack);
+	
+			_t.to_dot("output/gtab/" + loop + "_" + inner++ + "_entry.dot", Debug.node_render_no_AX_AG_OG, _mask);
+			
+			Pair<AndNode,DeonticProposition> injection_point = _injection_stack.pollLast();
+			System.out.println(injection_point);
 		
-		int step = 0;
-		
-		/*
-		 * 	FAULT GENERATION LOOP
-		 * 
-		*/
-		while(!pending_faults.isEmpty()) { 
-			fault_generators = new HashSet<>();
-			if(debug) _t.to_dot("output/inject_"+step+"_start.dot", Debug.node_render_min, masked_by);
-			
-			// INJECT GENERATORS
-			while(!pending_faults.isEmpty()) {				
-				Pair<AndNode,DeonticProposition> p = pending_faults.stream().findFirst().get();
-				
-				if(debug) System.out.println("[inject step " + step + "] : injecting " + p);
-				
-				fault_generators.addAll(inject_fault(p.first, p.second.get_prop()));				
-				pending_faults.remove(p);
-				injected_faults.add(p);
-			}	
-			if(debug) _t.to_dot("output/inject_"+step+"_gens.dot", Debug.node_render_min, masked_by);
-			
-			_t.do_tableau(false);
-			if(debug) _t.to_dot("output/inject_"+step+"_tab.dot", Debug.node_render_min, masked_by);
-			
-			 masked_by = new MaskingCalculator(_t,masked_by).compute();
-			
-			 if(debug) _t.to_dot("output/inject_"+step+"_remask.dot", Debug.node_render_min, masked_by);
+			// Copy of the tableaux's nodes. To rollback in case of unmasked faults.
+			Set<TableauxNode> old_nodes = _t.nodes().stream().collect(Collectors.toSet());
 
-			pending_faults = 
-					minus(detect_fault_injection_points(),injected_faults);
+			Set<AndNode> new_ands = new HashSet<>();
+			new_ands.addAll(inject_fault(injection_point.first, injection_point.second));
+			// DEBUG
+			_t.to_dot("output/gtab/" + loop + "_" + inner++ + "_post_inject.dot", Debug.node_render_no_AX_AG_OG, _mask);
 			
-			step++;
-		}
-		
-		
-		
-		
-		
-			/*List<TableauxNode> faults = new LinkedList();
-			for(OrNode o : fault_generator) {
-				faults.addAll(expand(o,false));
-			}
-			for(TableauxNode n : faults) {
-				AndNode fault = (AndNode) n;	
-				
-				AndNode injection_point = p.first;
-				AndNode i_mask = maskedBy.get(injection_point);
-				if (i_mask == null)
-					nonmasking_faults.add(fault);
-					// Add EF(reach_somesucc), don't think its nessesary
-				else {	
-					Set<AndNode> candidates = succesors(i_mask)
-							.stream()
-							.map(x -> succesors(x))
-							.reduce(make_set(), SetUtils::union)
-							.stream()
-							.map((TableauxNode x) -> (AndNode) x)
-							.collect(Collectors.toSet());
-					Optional<AndNode> mask = candidates
-							.stream()
-							.filter(x -> sublabeling(x).equals(sublabeling(n)))
-							.findAny();
-					if(mask.isPresent()) {
-						maskedBy.put(fault, mask.get());
-					} else {
-						// Can't just add formulas to the node. It will change the hash
-						// And throw graph library off.
-						// WORKAROUND
-						Set<StateFormula> forms = union(
-								fault.formulas,
-								recovery_formula(candidates.stream().map(x -> x.formulas).collect(Collectors.toSet()))
-								);
-						AndNode new_node = new AndNode(forms);
-						graph.addVertex(new_node);
-						for(TableauxNode pre : predecesors(fault, graph)) graph.addEdge(pre, new_node);
-						for(TableauxNode post : succesors(fault, graph)) graph.addEdge(new_node, post);
-						graph.removeVertex(fault);
-						nonmasking_faults.add(new_node);
-						assert(new_node.formulas.equals(forms));
-					}
-						
-						
+			for(AndNode _n : new_ands)
+				new_ands.addAll(gtab(_n));
+			
+			// DEBUG
+			_t.to_dot("output/gtab/" + loop + "_" + inner++ + "_post_gtab.dot", Debug.node_render_no_AX_AG_OG, _mask);
+			
+			// check _mask and filter out invalid pairs.
+			filter_mask();
+			
+			// DEBUG
+			_t.to_dot("output/gtab/" + loop + "_" + inner++ + "_post_filter.dot", Debug.node_render_no_AX_AG_OG, _mask);
+			
+			for(AndNode n : new_ands)
+				if(_mask.pre_img(n).isEmpty()) {
+					if(_t.normal_nodes().contains(n)) 
+						assert false : "Deletion attempt of node " + n + "due to empty mask.";
+					_t.delete_node(n);
+					System.out.println("Untollerated fault : " + n);
 				}
-				
-			}			
-			if(debug && i % step == 0)
-				System.out.println("[step " + i + "] injected faults : " + faults);
-			if(debug && i % step == 0) 
-				faults.stream().forEach(x -> 
-					System.out.println("\t " + x + " is masked by " + maskedBy.get(x))				
-					);
+			
+			new_ands = intersection(new_ands,_t.and_nodes());
+					
+			_t.to_dot("output/gtab/" + loop + "_" + inner++ + "_end_of_loop.dot", Debug.node_render_no_AX_AG_OG, _mask);
+			
+			_injection_stack.addAll(get_injection_points(new_ands));
+			
+			loop++;
+		}
+		_t.to_dot("output/gtab/" + loop + "_tableaux_final.dot", Debug.node_render_no_AX_AG_OG, _mask);
+		
+		System.out.println("check mask : " + check_mask());
+		return _mask;
+	}
+	
 
-			for (AndNode a : nonmasking_faults)
-				assert graph.vertexSet().contains(a);
-				
-			if (debug && i % step == 0)
-				System.out.println("[step " + i + "] non_masking_faults : " + nonmasking_faults);
-			
-			
-			do_tableau(false);
-			if (debug && i % step == 0)
-				System.out.println("[step " + i + "] to_delete : " + to_delete);
-			
-			if (debug && i % step == 0) 
-				System.out.println("[step " + i + "] delete : " + delete_inconsistent());
-			pending_faults.remove(p);
-			injected_faults.add(p);
-				
-			if (debug && i % step == 0)
-				Debug.to_file(
-					Debug.to_dot(this.graph, Debug.default_node_render), 
-					"output/inject_step" + i + ".dot"
-				);
-			
-			if (debug && i % step == 0) 
-				System.out.println("[step " + i + "] nodes : " + graph.vertexSet().size()
-					+ " injected_faults : " + injected_faults.size() + " pending faults : " 
-					+ pending_faults.size()); 
-			
-			pending_faults.addAll(minus(detect_fault_injection_points(),injected_faults));
-			
-			if (debug && i % step == 0)
-				System.out.println("[step " + i + "] new pending faults : " 
-					+ pending_faults.size()); 
-			commit();
-			
-			
-			// Remove untolerated faults
-			
-			//for(AndNode f : intersection(maskedBy.keySet(),nonmasking_faults)) {
-				//maskedby
-			//}
-			
-			/* REDO THIS!!!
-			 * 
-			 * 
-			 * 
-			if (!intersection(masked_by.keySet(),nonmasking_faults).isEmpty()) {
-				System.out.println("It pet : " + 
-						intersection(masked_by.keySet(),nonmasking_faults)
-						.stream()
-						.map(x -> get_node(x))
-						.collect(Collectors.toSet())
-						);
-				assert false;
+	
+	
+	
+	
+	/** Routine for fixing redundant And nodes. Given a set of And nodes
+	 * it checks for the existence of And nodes which may contain both
+	 * OB(p) and OB(!p) obligations. Such nodes are considered redundant
+	 * and deleted.
+	 * 
+	 * @param ands set of And Nodes to filtrate.
+	 * @return set of And nodes that made it through the filtration. 
+	*/
+	private Set<AndNode> identify_redundancies(Set<AndNode> ands) {
+		Set<AndNode> res = new HashSet<>();
+		res.addAll(ands);
+		for(AndNode n : ands) {
+			Set<StateFormula> oblit = n.formulas
+					.stream()
+					.filter(f -> f instanceof DeonticProposition)
+					.map(f -> (DeonticProposition) f)
+					.map(ob -> ob.get_prop())
+					.collect(Collectors.toSet());
+			if(!DCTLUtils.is_consistent(oblit)) {
+				_t.delete_node(n);
+				res.remove(n);
 			}
 			
-		}*/
-		if (debug) System.out.println("non-masking faults : " + nonmasking_faults.size());
-		if (debug) System.out.println("fault-injection success.");
+		}
+		return res;
+	}
+	
+	
+	/**	Method for checking pairs of the masking relation stored in 
+	 * the local field _mask. The pairs violating masking conditions
+	 * are removed.
+	*/	
+	private void filter_mask() {
+		Set<Pair<?,?>> to_remove = new HashSet<>();
+				
+		for(Pair<AndNode, AndNode> p : _mask) {
+			AndNode s1 = p.first;
+			AndNode s2 = p.second;
+			
+			// Condition 1 : labelings
+			if(!_t.sublabeling(s1).equals(_t.sublabeling(s2))) {
+				to_remove.add(p);
+				continue;
+			}
+			
+			// Condition 2
+			for(AndNode _s1 : _t.postN(s1)) {
+				boolean r = false;
+				for(AndNode _s2 : _t.post(s2)) {
+					if(_mask.contains(new Pair(_s1,_s2)))
+						r = true;
+				}	
+				if(!r) {
+					to_remove.add(p);
+					continue;
+				}
+			}
+			
+			// Condition 3
+			for(AndNode _s2 : _t.postN(s2)) {
+				boolean r = false;
+				for(AndNode _s1 : _t.postN(s1)) {
+					if(_mask.contains(new Pair(_s1,_s2)))
+						r = true;
+				}
+				if(!r) {
+					to_remove.add(p);
+					continue;
+				}
+			}
+			
+			// Condition 4
+			for(AndNode _s2 : _t.postF(s2)) {
+				boolean r = false;
+				for(AndNode _s1 : _t.postN(s1)) {
+					if(_mask.contains(new Pair(_s1,_s2)))
+						r = true;
+				}	
+				if(!r && !_mask.contains(new Pair(s1,_s2))){
+					to_remove.add(p);
+					continue;
+				}
+			}
+		}
+		_mask.removeAll(to_remove);
+	}
+	
+	/**	Method for checking validity of the masking relation stored in 
+	 * the local field _mask.
+	 * 
+	 *  @return true iff _mask is and actual masking relation
+	*/	
+	private boolean check_mask() {
 		
-		return masked_by;
+		for(Pair<AndNode, AndNode> p : _mask) {
+			AndNode s1 = p.first;
+			AndNode s2 = p.second;
+			
+			// Condition 1 : labelings
+			if(!_t.sublabeling(s1).equals(_t.sublabeling(s2)))
+				return false;
+			
+			// Condition 2
+			for(AndNode _s1 : _t.postN(s1)) {
+				boolean r = false;
+				for(AndNode _s2 : _t.post(s2)) {
+					if(_mask.contains(new Pair(_s1,_s2)))
+						r = true;
+				}	
+				if(!r)
+					return false; 
+				
+			}
+			
+			// Condition 3
+			for(AndNode _s2 : _t.postN(s2)) {
+				boolean r = false;
+				for(AndNode _s1 : _t.postN(s1)) {
+					if(_mask.contains(new Pair(_s1,_s2)))
+						r = true;
+				}
+				if(!r)
+					return false;
+			}
+			
+			// Condition 4
+			for(AndNode _s2 : _t.postF(s2)) {
+				boolean r = false;
+				for(AndNode _s1 : _t.postN(s1)) {
+					if(_mask.contains(new Pair(_s1,_s2)))
+						r = true;
+				}	
+				if(!r && !_mask.contains(new Pair(s1,_s2)))
+					return false; 
+			}
+			
+		}		
+		return true;
 	}
 	
 	
@@ -221,12 +261,37 @@ public class FaultInjectorII {
 	
 	
 	
-	private Set<OrNode> inject_fault(Pair<AndNode,DeonticProposition> p ) {
-		return inject_fault(p.first,p.second.get_prop());
+	
+	
+	
+
+
+	/* 	Initialization of normal nodes
+	 * 
+	 * 	Initially we set up the relation with the identity over
+	 * 	normal nodes.
+	*/	
+	private void initialize_mask() {		
+		_mask = new MaskingCalculator(_t).compute();
 	}
 	
-	private Set<OrNode> inject_fault(AndNode n, StateFormula p) {
-		//assert n.formulas.contains(p);
+	
+	
+	/**
+	 * Given an AndNode and an obligation to violate, it injects a fault (OrNode generator)
+	 * characterizing the ocurrence of that fault and develops the or node into AndNode.
+	 * Let n be the normal nodes aginst which the injection is performed, and let n' range
+	 * through every fault injected, then _mask(n') = {n} + succs(n). 
+	 * 
+	 * @param n the AndNode where the fault is to be injected.
+	 * @param ob the obligation to violate. 
+	 * @return the Set<AndNode> set of actual faults.
+	 */
+	private Set<AndNode> inject_fault(AndNode n, DeonticProposition ob) {
+		
+		assert n.formulas.contains(ob); 
+		
+		StateFormula p = ob.get_prop();
 		assert p.is_literal();		
 				
 		// Collecting propositions that are deontically affected
@@ -238,8 +303,6 @@ public class FaultInjectorII {
 				.map(x -> (x instanceof Negation)?((Negation) x).arg():x)
 				.map(x -> (Proposition) x)
 				.collect(Collectors.toSet());
-		
-		//System.out.println("deontically_affected_props : " + deontically_affected_props);
 		
 		// Collecting literals that are based on a deontically affected prop
 		Set<StateFormula> next_literals = n.formulas
@@ -259,7 +322,6 @@ public class FaultInjectorII {
 				.filter(x -> x instanceof DeonticProposition)
 				.collect(Collectors.toSet());
 		
-		
 		// This is it. Every formula to be passed on to the next node must be here.
 		Set<StateFormula> next_formulas = union(next_literals,next_obligations);
 		StateFormula next_state_descriptor = 				
@@ -272,55 +334,109 @@ public class FaultInjectorII {
 		
 		Set<StateFormula> new_forms = union(n.formulas, next_state_descriptor);
 		
-		AndNode ghost = new AndNode(new_forms);
-		Set<OrNode> faulty_succs = ghost.tiles();
+		AndNode ghost = new AndNode(new_forms);		
+		// this needs to be done to get the generator and
+		// filter out spurious succesors that will already be
+		// in the tableaux
+		Set<OrNode> faulty_succs = minus(ghost.tiles(), _t.succesors(n));
+		assert faulty_succs.size() == 1;
+		OrNode generator = faulty_succs.stream().findFirst().get();
 		
-		//assert faulty_succs.size() == 1;
+		generator = (OrNode) _t.add_node(generator);
+		_t.add_edge(n,generator);
 		
-		Set<OrNode> res = new HashSet<>();
-		for(OrNode f : faulty_succs) {
-			res.add((OrNode) _t.add_node(f));//.get_graph().addVertex(f);
-			_t.add_edge(n,f);//.get_graph().addEdge(n, f);
-		}
+		_injected_faults.add(new Pair(n,ob));
 	
-		return res;
+		// Expansion of the OrNode and filtration in case of
+		// redundant AndNodes
+		Set<AndNode> faults = _t.expand(generator, false)
+				.stream()
+				.map(x -> (AndNode) x)
+				.collect(Collectors.toSet());
+		faults = identify_redundancies(faults);
+		
+		//Update on _mask
+		for(AndNode f : faults) {
+			_mask.put(n, f);
+			for(AndNode _n : _t.succesors2(n))
+				if(!_n.faulty)
+					_mask.put(_n, f);
+		}
+			
+		return faults;		
 	}
 	
-	/* Returns a map which domain represents the set of nodes where it is posible to
-	 * inject faults. And the image of a node is a set of deontic variables to violate
-	 * in order to generate a new fault.
+	/**	Permorms guided tableaux expansion on the given And node.
+	 * The node's Or node succesors are generated, and then the 
+	 * And succesors of these are generated in turn. The _mask relation
+	 * is updated acordingly.
+	 * 
+	 * @param n the And node to expand.
+	 * @return the set of new And nodes generated by the expansion.
 	*/
-	public Set<Pair<AndNode,DeonticProposition>> detect_fault_injection_points()
-	{
-		Set<Pair<AndNode,DeonticProposition>> res = new HashSet<>();
-		for(TableauxNode n : _t.get_graph().vertexSet()) {
-			if(n instanceof AndNode) {
-				// We check whether we have an AND-Node with obligations to violate.
-				Set<DeonticProposition> obligations = new HashSet<DeonticProposition>();
-				for(StateFormula f : n.formulas) {
-					if(f instanceof DeonticProposition)
-						if(prop_sat(n.formulas,((DeonticProposition) f).get_prop()))
-							res.add(new Pair(n,f));
-				}
-			}		
-		}
-		return res;
-	}
-	
-	private StateFormula recovery_formula(Set<Set<StateFormula>> sets) {
-		StateFormula res = new False();
-		for(Set<StateFormula> s : sets) {
-			StateFormula clause = s
-					.stream()
-					.filter(x -> x instanceof Proposition)
-					.reduce(new False(), (x,y) -> new And(x,y));
-			res = new Or(res, clause);
-		}
-		res = new Exists(new Next(res));
-		return res;
+	public Set<AndNode> gtab(AndNode n) {
+		Set<TableauxNode> ors = _t.expand(n)
+				.stream()
+				.collect(Collectors.toSet());
+		Set<TableauxNode> new_ors = ors.stream()
+				.filter(x -> !_t.nodes().contains(x))
+				.collect(Collectors.toSet());
+		Set<TableauxNode> old_ors = minus(ors,new_ors);
+		
+		Set<AndNode> ands = new HashSet<>();
+		for(TableauxNode o : new_ors)
+			ands.add((AndNode) _t.expand((OrNode) o, false));
+		for(TableauxNode o : old_ors)
+			for(TableauxNode _n : _t.succesors(o))
+				ands.add((AndNode) _n);
+		
+		_mask.addAll(times(_t.succesors2(_mask.pre_img(n)),ands));
+		
+		return ands;	
 	}
 	
 	
 	
-
+	
+	
+	// Gets every obligation to violate for a given node
+	private LinkedList<Pair<AndNode,DeonticProposition>> get_injection_points(Set<AndNode> ns) {
+		LinkedList<Pair<AndNode,DeonticProposition>> res = new LinkedList();
+			
+		for(AndNode n : ns)
+			res.addAll(get_injection_points(n));
+				
+		return res;
+	}
+	
+	
+	// Gets every obligation to violate for a given node
+	private LinkedList<Pair<AndNode,DeonticProposition>> get_injection_points(AndNode n) {
+		LinkedList<Pair<AndNode,DeonticProposition>> res = new LinkedList();
+		
+		for(StateFormula f : n.formulas)
+			if(f instanceof DeonticProposition)
+				if(prop_sat(n.formulas,((DeonticProposition) f).get_prop()))
+					res.add(new Pair(n,f));
+				
+		res.removeAll(_injected_faults);
+		return res;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }

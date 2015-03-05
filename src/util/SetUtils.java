@@ -2,6 +2,9 @@ package util;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.*;
+import java.util.stream.Collectors;
+
 
 public final class SetUtils {
 	
@@ -83,14 +86,14 @@ public final class SetUtils {
 	
 	public static <E> boolean some(Set<E> set, Predicate<E> prop) {
 		for(E _elem : set)
-			if(prop.eval(_elem))
+			if(prop.test(_elem))
 				return true;
 		return false;
 	}
 	
 	public static <E> boolean all(Set<E> set, Predicate<E> prop) {
 		for(E _elem : set)
-			if(!prop.eval(_elem))
+			if(!prop.test(_elem))
 				return false;
 		return true;
 	}
@@ -98,7 +101,7 @@ public final class SetUtils {
 	public static <E> Set<E> filter(Set<E> set, Predicate<E> prop) {
 		Set<E> res = new HashSet<E>();
 		for(E _elem : set)
-			if(prop.eval(_elem))
+			if(prop.test(_elem))
 				res.add(_elem);
 		return res;
 	}
@@ -111,13 +114,18 @@ public final class SetUtils {
 			return res.iterator().next();
 	}	
 	
-	public static <E> Set<E> map(Set<E> set, Function<E> f) {
-		Set<E> r = new HashSet<E>();
-		for (E x : set)
-			r.add(f.eval(x));
-		return r;
+	public static <E> Set<E> map(Set<E> set, Function<E,E> f) {
+		return set.stream().map(f).collect(Collectors.toSet());
 	}
 	
 	
+	public static <A,B> Function<Set<A>,Set<B>> lift(Function<A,B> f) {
+		return new Function<Set<A>, Set<B>>() {
+			@Override
+			public Set<B> apply(Set<A> t) {
+				return t.stream().map(f).collect(Collectors.toSet());
+			}
+		};	
+	}
 	
 }

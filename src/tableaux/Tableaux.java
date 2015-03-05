@@ -205,6 +205,32 @@ public class Tableaux {
 			res.add(graph.getEdgeTarget(e));
 		return res;
 	}
+		
+	public Set<AndNode> succesors(OrNode n) {
+		HashSet<AndNode> res = new HashSet<AndNode>();
+		for(DefaultEdge e : graph.outgoingEdgesOf(n))
+			res.add((AndNode) graph.getEdgeTarget(e));
+		return res;
+	}
+	
+	public Set<OrNode> succesors(AndNode n) {
+		HashSet<OrNode> res = new HashSet<OrNode>();
+		for(DefaultEdge e : graph.outgoingEdgesOf(n))
+			res.add((OrNode) graph.getEdgeTarget(e));
+		return res;
+	}
+	
+	public Set<AndNode> succesors2(AndNode n) {
+		HashSet<AndNode> res = new HashSet<AndNode>();
+		for(DefaultEdge e : graph.outgoingEdgesOf(n))
+			res.addAll(succesors((OrNode) graph.getEdgeTarget(e)));
+		return res;
+	}
+	
+	public Set<AndNode> succesors2(Set<AndNode> n) {
+		return n.stream().map(x -> succesors2(x)).reduce(make_set(), SetUtils::union);
+	}
+	
 	
 	private Set<TableauxNode> succesors(Set<TableauxNode> ns) {
 		Set<TableauxNode> empty = new HashSet<TableauxNode>();
@@ -297,12 +323,14 @@ public class Tableaux {
 	public List<TableauxNode> do_tableau(boolean deontic_filter) {
 		List<TableauxNode> res = new LinkedList<>();
 		int step = 0;
+		//this.to_dot("output/tab/tableaux_" + step++ + ".dot", Debug.default_node_render);
 		while (this.frontier().stream()
 				.filter(x -> !to_delete.contains(x))
 				.findFirst()
 				.isPresent()) 
 		{
 			res.addAll(expand(deontic_filter));
+			//this.to_dot("output/tab/tableaux_" + step++ + ".dot", Debug.default_node_render);
 		}
 		return res;
 	}
@@ -324,25 +352,10 @@ public class Tableaux {
 	 *	And node expansion 
 	*/
 	public List<TableauxNode> expand(AndNode n) {
-		List<TableauxNode> res = new LinkedList<TableauxNode>();
+		List<TableauxNode> res = new LinkedList<>();
+		Set<OrNode> nodes = n.tiles();
 		
-		Set<StateFormula> ax_formulas =  n.formulas
-				.stream()
-				.filter(f -> f instanceof Forall)
-				.map(f -> ((Forall) f).arg())
-				.filter(f -> f instanceof Next)
-				.map(f -> ((Next) f).arg())
-				.collect(Collectors.toSet());
-		
-		Set<StateFormula> ex_formulas = n.formulas
-				.stream()
-				.filter(f -> f instanceof Exists)
-				.map(f -> ((Exists) f).arg())
-				.filter(f -> f instanceof Next)
-				.map(f -> ((Next) f).arg())
-				.collect(Collectors.toSet());
-		
-		if(ex_formulas.isEmpty() && ax_formulas.isEmpty()) {
+		if(nodes.isEmpty()) {
 			// create dummy succesor
 			OrNode _dummy = new OrNode(n.formulas);
 			graph.addVertex(_dummy);
@@ -352,28 +365,11 @@ public class Tableaux {
 			return res;		
 		}
 		
-		if (ex_formulas.isEmpty() && !ax_formulas.isEmpty())
-			ex_formulas.add(new True());
-		
-		if (!ex_formulas.isEmpty()) {
-			Set<Set<StateFormula>> _succs = ex_formulas
-					.stream()
-					.map(f -> union(ax_formulas, f))
-					.collect(Collectors.toSet());
-			
-			/*_succs = _succs
-					.stream()
-					.filter(x -> is_consistent(x))
-					.collect(Collectors.toSet());
-			*/
-			//System.out.println("[expand(AndNode)] :  " + _succs + ex_formulas + ax_formulas);
-			
-			for(Set<StateFormula> _s : _succs) {
-				OrNode _node = new OrNode(_s);
-				graph.addVertex(_node);
-				graph.addEdge(n, _node);
-				res.add(_node);
-			}			
+		for(OrNode _node : nodes) {
+			graph.addVertex(_node);
+			graph.addEdge(n, _node);
+			res.add(_node);
+					
 		}	
 		
 		return res;
@@ -394,31 +390,11 @@ public class Tableaux {
 		if(debug) System.out.println("\n _succs : " + _succs);
 		if(_succs.isEmpty())
 			to_delete.add(n);
-		
-		//_succs = _succs.stream().filter(s -> is_consistent(s)).collect(Collectors.toSet());
-		
+				
 		_nodes = _succs.stream().map(s -> new AndNode(s)).collect(Collectors.toSet());
 		
-		/*for(Set<StateFormula> s : _succs) {
-			assert is_closed(s);
-			Set<StateFormula> triggered_guards = new HashSet<>();
-			Set<Set<StateFormula>> guard_closure = new HashSet<>();
-			
-			for(StateFormula guard : _spec._global_rules.keySet())
-				if(prop_sat(s, guard))
-					triggered_guards.addAll(_spec._global_rules.get(guard));
-					
-			guard_closure = closure(triggered_guards);
-			//System.out.println("\n _guard_closure : " + guard_closure);
-			for(Set<StateFormula> _g : guard_closure) {
-				_g = union(_g,s);
-				if(debug) System.out.println("_g : " + _g);
-				if(is_consistent(_g))
-					_nodes.add(new AndNode(_g));
-			}				
-		}*/
-
 		if(debug) System.out.println("_nodes : " + _nodes);
+		
 		if(deontic_filter) {
 			// Filtrado de nodos fallidos que sean relizables sin fallas.
 			// Las fallas son insertadas posteriormente en fault injection
@@ -442,29 +418,6 @@ public class Tableaux {
 			_nodes = _nodes_deontic_filter;
 			//System.out.println("_nodes : " + _nodes);
 		}
-		
-		
-		// Cociente modulo formulas elementary.
-		
-		Set<AndNode> _nodes_elementary_filter = new HashSet<AndNode>();
-		Function<AndNode,Set<StateFormula>> elem_flas = ((AndNode node) -> 
-			node.formulas
-			.stream()
-			.filter(x -> x.is_elementary())
-			.collect(Collectors.toSet()));
-		for(AndNode _m : _nodes) {
-			if(!_nodes_elementary_filter.stream().anyMatch(
-					x -> elem_flas.apply(x).equals(elem_flas.apply(_m))
-					)
-				)
-			{
-				_nodes_elementary_filter.add(_m);
-			}
-		}
-		if(debug) System.out.println(_nodes.size() - _nodes_elementary_filter.size() + " elem-equivalent nodes filtered.");
-		_nodes = _nodes_elementary_filter;
-		
-		
 		
 		for(AndNode _m : _nodes) {
 			graph.addVertex(_m);
@@ -1151,6 +1104,7 @@ public class Tableaux {
 			res += map.get(graph.getEdgeSource(e)) + "->" + map.get(graph.getEdgeTarget(e)) + ";\n";
 		}
 		
+		if (nmask != null)
 		for(Pair<AndNode,AndNode> p : nmask) {
 			res += map.get(p.second) + "->" + map.get(p.first) + " [color=red];\n";
 		}
@@ -1236,6 +1190,41 @@ public class Tableaux {
 		
 		res += "}";		
 		to_file(res, path);
+	}
+	
+	
+	public void to_json(String path) {
+		String res = "", nodes = "", edges = "";
+		
+		nodes += "{";
+		nodes += this.graph.vertexSet()
+			.stream()
+			.map(n -> "\"" + n.toString() + "\"" + ":{}")
+			.reduce((String x, String y) -> x + ",\n" + y).get();
+		nodes += "}";
+		
+		edges += "{";
+		edges += this.graph.vertexSet()
+				.stream()
+				.map(n -> "\"" + n.toString() + "\"" + ": {" +
+						succesors(n).stream()
+						.map(_n -> "\"" + _n.toString() + "\"" + ":{}")
+						.reduce((String x, String y) -> x + ",\n" + y).get()
+						+ "}")
+				.reduce((String x, String y) -> x + ",\n" + y).get();
+		edges += "}";
+		
+		
+		res += "{\n\"nodes\" :\n" + nodes + ",\n\"edges\" : \n" + edges + "\n}";
+		res = res.replaceAll("-", "");
+		//res = res.replaceAll("\n", "");
+		to_file(res, path);
+
+		//System.out.println(" -------------- nodes ---------------");
+		//System.out.println(nodes);
+
+		//System.out.println(" -------------- edges ---------------");
+		//System.out.println(edges);
 	}
 	
 	

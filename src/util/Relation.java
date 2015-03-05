@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+import static util.SetUtils.make_set;
 
 import tableaux.AndNode;
 
@@ -32,6 +33,21 @@ public class Relation<A,B> implements Set<Pair<A,B>> {
 
 	public Set<B> img() {
 		return _impl.stream().map(p -> p.second).collect(Collectors.toSet());
+	}
+	
+	public Set<A> pre_img(B b) {
+		return _impl
+				.stream()
+				.filter(p -> p.second.equals(b))
+				.map(p -> p.first)
+				.collect(Collectors.toSet());
+	}
+	
+	public Set<A> pre_img(Set<B> bs) {
+		return bs
+				.stream()
+				.map(b -> pre_img(b))
+				.reduce(make_set(), SetUtils::union);
 	}
 	
 	public Set<B> get(A a) {

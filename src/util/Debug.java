@@ -17,6 +17,10 @@ import tableaux.AndNode;
 import tableaux.OrNode;
 import tableaux.TableauxNode;
 import dctl.formulas.DeonticProposition;
+import dctl.formulas.Forall;
+import dctl.formulas.Globally;
+import dctl.formulas.Next;
+import dctl.formulas.Obligation;
 import dctl.formulas.StateFormula;
 
 public class Debug {
@@ -34,6 +38,28 @@ public class Debug {
 					.reduce("",String::concat) 
 					+ "\"];"
 				);
+		
+	public static final Function<TableauxNode,String> node_render_no_AX_AG_OG = 
+			(TableauxNode n) -> (
+					"[shape=" + ((n instanceof AndNode)?"box":"circle") +
+					(n.faulty?",style=dotted":"") +
+					",label=\"" + n.toString() + "\n" +
+					n.formulas
+					.stream()
+					.filter(x -> ! (
+								x instanceof Forall && (
+										((Forall)x).arg() instanceof Next || 
+										((Forall)x).arg() instanceof Globally										
+										)
+								|| x instanceof Obligation && ((Obligation)x).arg() instanceof Globally		
+								)
+							)
+					.map(x -> x.toString() + "\n")
+					.sorted((String x, String y) -> y.length() - x.length())
+					.reduce("",String::concat) 
+					+ "\"];"
+				);		
+			
 			
 	public static final Function<TableauxNode,String> node_render_elem = 
 			(TableauxNode n) -> (

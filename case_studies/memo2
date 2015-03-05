@@ -1,0 +1,27 @@
+--Interface
+
+val;
+
+--InitialState
+
+(c0 && c1 && c2 && input) || (!c0 && !c1 && !c2 && !input);
+
+
+
+--Specification
+
+OG((c0 && c1 && c2) || (!c0 && !c1 && !c2));
+
+AG(val <-> ((c0 && c1 ) || (c0 && c2) || (c1 && c2) || (c0 && c1 && c2)));
+
+
+
+AG((!input && val) -> AX(!c0 && !c1 && !c2 && !input));
+
+AG((input && !val) -> AX(c0 && c1 && c2 && input));
+
+
+AG((input && val) -> EX(c0 && c1 && c2));
+
+AG((!input && !val) -> EX(!c0 && !c1 && !c2));
+

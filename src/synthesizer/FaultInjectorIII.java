@@ -3,6 +3,8 @@ package synthesizer;
 import static dctl.formulas.DCTLUtils.prop_sat;
 import static util.SetUtils.make_set;
 import static util.SetUtils.union;
+import static util.SetUtils.minus;
+
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -243,20 +245,30 @@ public class FaultInjectorIII {
 		Set<Pair<OrNode, AndNode>> result = new HashSet<>();
 		Pair p;
 		
-		while ((p = get_fault_injection_point()) != null)
-			result.addAll(inject_fault(p));
+		//while ((p = get_fault_injection_point()) != null)
+			//result.addAll(inject_fault(p));
 		
 		return result;
 	}
 	
-	// Injects one fault
-	private Set<Pair<OrNode, AndNode>> inject_fault(Pair<AndNode,DeonticProposition> p ) {
-		return inject_fault(p.first,p.second.get_prop());
-	}
 	
-	// Inject one fault
-	private Set<Pair<OrNode, AndNode>> inject_fault(AndNode n, StateFormula p) {
-		//assert n.formulas.contains(p);
+	
+	
+	
+	
+	
+	/**
+	 * Given an AndNode and an obligation to violate, it injects a fault (OrNode generator)
+	 * characterizing the ocurrence of that fault.
+	 * @param n the AndNode where the fault is to be injected.
+	 * @param ob the obligation to violate. 
+	 * @return the OrNode generator of that fault.
+	 */
+	private OrNode inject_fault(AndNode n, DeonticProposition ob) {
+		
+		assert n.formulas.contains(ob); 
+		
+		StateFormula p = ob.get_prop();
 		assert p.is_literal();		
 				
 		// Collecting propositions that are deontically affected
@@ -268,8 +280,6 @@ public class FaultInjectorIII {
 				.map(x -> (x instanceof Negation)?((Negation) x).arg():x)
 				.map(x -> (Proposition) x)
 				.collect(Collectors.toSet());
-		
-		//System.out.println("deontically_affected_props : " + deontically_affected_props);
 		
 		// Collecting literals that are based on a deontically affected prop
 		Set<StateFormula> next_literals = n.formulas
@@ -289,9 +299,6 @@ public class FaultInjectorIII {
 				.filter(x -> x instanceof DeonticProposition)
 				.collect(Collectors.toSet());
 		
-		// Override!!!
-		//next_obligations = make_set();
-		
 		// This is it. Every formula to be passed on to the next node must be here.
 		Set<StateFormula> next_formulas = union(next_literals,next_obligations);
 		StateFormula next_state_descriptor = 				
@@ -304,18 +311,20 @@ public class FaultInjectorIII {
 		
 		Set<StateFormula> new_forms = union(n.formulas, next_state_descriptor);
 		
-		AndNode ghost = new AndNode(new_forms);
-		Set<OrNode> faulty_succs = ghost.tiles();
-		faulty_succs.stream().forEach(o -> o.faulty = true);
-		//assert faulty_succs.size() == 1;
+		AndNode ghost = new AndNode(new_forms);		
+		// this needs to be done to get the generator and
+		// filter out spurious succesors that will already be
+		// in the tableaux
+		Set<OrNode> faulty_succs = minus(ghost.tiles(), _t.succesors(n));
+		assert faulty_succs.size() == 1;
+		OrNode generator = faulty_succs.stream().findFirst().get();
 		
-		Set<OrNode> res = new HashSet<>();
-		for(OrNode f : faulty_succs) {
-			res.add((OrNode) _t.add_node(f));//.get_graph().addVertex(f);
-			_t.add_edge(n,f);//.get_graph().addEdge(n, f);
-		}
+		generator = (OrNode) _t.add_node(generator);
+		_t.add_edge(n,generator);
 		
-		return res.stream().map(o_node -> new Pair<OrNode,AndNode>(o_node,n)).collect(Collectors.toSet());
+		_injected_faults.add(new Pair(n,ob));
+	
+		return generator;
 	}
 	
 	// Gets the next pair of (AndNode,ObligationFormula) that is suitable
@@ -339,6 +348,8 @@ public class FaultInjectorIII {
 		}
 		return null;
 	}
+	
+	
 	
 	
 	

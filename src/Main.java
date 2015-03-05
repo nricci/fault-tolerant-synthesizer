@@ -98,6 +98,7 @@ public class Main {
 	
 			t.to_dot("output/tableaux.dot", Debug.default_node_render);
 			t.to_dot("output/tableaux_min.dot", Debug.node_render_min);
+			t.to_json("viz/json/tableaux.json");
 			
 
 			
@@ -106,53 +107,28 @@ public class Main {
 			Relation<AndNode,AndNode> rel = null;
 			
 			switch(method) {
-			case 2:
-				// EL QUE FUNCA
+			case 0:
+				System.out.println("Skiping fault injection.");
+				return;
+			
+			case 1:
+				// Baseline
 				
-				System.out.print("[fault-injection (good)] ... ");
-				new FaultInjector(t).inject_faults();
-				System.out.println("done.");
-				System.out.print("[non-masking relation] ... ");
-				rel =  new NonMaskingCalculator(t).compute();
+				System.out.print("[fault-injection (FaultInjector 1)] ... ");
+				rel = new FaultInjector(t).run();
 				System.out.println("done.");
 				
-				for(TableauxNode n : t.get_graph().vertexSet()) {
-					if (n instanceof AndNode && n.faulty) {
-						Set<?> set = rel
-								.stream()
-								.filter(p -> p.first.equals(n))
-								.map(p -> p.second)
-								.filter(x -> !x.faulty)
-								.collect(Collectors.toSet());
-						if(set.isEmpty())
-							System.out.println("Untollerated Fault : " + n);
-					}
-				}
 			break;	
-			case 3:
-				// ON THE FLY NUEVO
+			case 2:
+				// Some degree of (on-the-fly)ness
 				
-				System.out.print("[fault-injection (new onthefly)] ... ");
-				rel = new FaultInjectorII(t).inject_faults();
+				System.out.print("[fault-injection (FaultInjector 1)] ... ");
+				rel = new FaultInjectorII(t).run();
 				System.out.println("done.");
-				System.out.print("[non-masking relation] ... ");
-				System.out.println("done.");
-				
-				for(TableauxNode n : t.get_graph().vertexSet()) {
-					if (n instanceof AndNode && n.faulty) {
-						Set<?> set = rel
-								.stream()
-								.filter(p -> p.first.equals(n))
-								.map(p -> p.second)
-								.filter(x -> !x.faulty)
-								.collect(Collectors.toSet());
-						if(set.isEmpty())
-							System.out.println("Untollerated Fault : " + n);
-					}
-				}
+	
 			break;
 			case 4:
-				// Masking y nomask por iteraciones
+				// OLD STUFF --- REMOVE
 				
 				System.out.print("[fault-injection] ... ");
 				
@@ -180,14 +156,30 @@ public class Main {
 			break;
 			
 			default:
-				assert false : "no such method (" + method + ")";	
+				System.out.println("no such method (" + method + ")");	
 			}
 			
-			assert rel != null;
+			/*	Reporting un tollerated faults. Should do nothing with
+			 *	on-the-fly variants. 
+			*/
+			for(TableauxNode n : t.get_graph().vertexSet()) {
+				if (n instanceof AndNode && n.faulty) {
+					Set<?> set = rel
+							.stream()
+							.filter(p -> p.first.equals(n))
+							.map(p -> p.second)
+							.filter(x -> !x.faulty)
+							.collect(Collectors.toSet());
+					if(set.isEmpty())
+						System.out.println("Untollerated Fault : " + n);
+				}
+			}
+			
 			
 			
 			t.to_dot("output/final_tableaux.dot", Debug.default_node_render);
-			t.to_dot("output/final_tableaux_elem.dot", Debug.node_render_elem, rel);
+			t.to_dot("output/final_tableaux_elem.dot", Debug.node_render_no_AX_AG_OG, rel);
+			t.to_dot("output/final_tableaux_min.dot", Debug.node_render_min, rel);
 			t.to_dot_levels_of_tolerance("output/levels.dot", null, rel);
 			
 		

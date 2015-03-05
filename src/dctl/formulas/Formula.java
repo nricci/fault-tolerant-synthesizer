@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import util.Predicate;
 import util.XMLBuilder;
 import util.binarytree.Tree;
 

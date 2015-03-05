@@ -10,9 +10,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import util.Predicate;
 import static util.SetUtils.make_set;
 import static util.SetUtils.minus;
 import static util.SetUtils.pick;
@@ -97,7 +97,8 @@ public class DCTLUtils {
 	
 	// Auxiliary Predicates
 	private static Predicate<StateFormula> is_non_elementary = new Predicate<StateFormula>() {
-		public boolean eval(StateFormula _arg) {return !_arg.is_elementary();}
+		@Override
+		public boolean test(StateFormula _arg) {return !_arg.is_elementary();}
 	};
 	
 	@SuppressWarnings("unchecked")
