@@ -2,10 +2,6 @@
 
 on;
 
---InitialState
-
-True;
-
 --Specification
 
 AG(w_ack0 -> s_msg0);

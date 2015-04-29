@@ -45,8 +45,7 @@ precedence left LPAREN;
 precedence right RPAREN;
 
 
-global_spec ::= interface 
-				INITIALSTATE formulas
+global_spec ::= interface
 				SPECIFICATION formulas
 			;
 				

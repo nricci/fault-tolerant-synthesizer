@@ -2,11 +2,11 @@
 
 a,b; 
 
---InitialState
+--Specification
+
 
 a && b;
 
---Specification
 
 OG(a || b);
 

@@ -323,14 +323,14 @@ public class Tableaux {
 	public List<TableauxNode> do_tableau(boolean deontic_filter) {
 		List<TableauxNode> res = new LinkedList<>();
 		int step = 0;
-		//this.to_dot("output/tab/tableaux_" + step++ + ".dot", Debug.default_node_render);
+		this.to_dot("output/tab/tableaux_" + step++ + ".dot", Debug.default_node_render);
 		while (this.frontier().stream()
 				.filter(x -> !to_delete.contains(x))
 				.findFirst()
 				.isPresent()) 
 		{
 			res.addAll(expand(deontic_filter));
-			//this.to_dot("output/tab/tableaux_" + step++ + ".dot", Debug.default_node_render);
+			this.to_dot("output/tab/tableaux_" + step++ + ".dot", Debug.default_node_render);
 		}
 		return res;
 	}

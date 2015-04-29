@@ -2,11 +2,9 @@
 
 r;
 
---InitialState
+--Specification
 
 (c0 && c1 && c2) || (!c0 && !c1 && !c2) && !w_ind;
-
---Specification
 
 OG((c0 && c1 && c2) || (!c0 && !c1 && !c2));
 

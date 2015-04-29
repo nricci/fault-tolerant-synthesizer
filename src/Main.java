@@ -72,8 +72,9 @@ public class Main {
 			Specification s = Parser.parse_specification(args[0]);
 					
 			// Tableaux
+			boolean filter = Boolean.parseBoolean(args[2]);
 			Tableaux t = new Tableaux(s);
-			t.do_tableau(true);
+			t.do_tableau(filter);
 			
 			System.out.println("tableau finished: " 
 					+ t.get_graph().vertexSet().size() + " nodes, "
@@ -98,18 +99,17 @@ public class Main {
 	
 			t.to_dot("output/tableaux.dot", Debug.default_node_render);
 			t.to_dot("output/tableaux_min.dot", Debug.node_render_min);
-			t.to_json("viz/json/tableaux.json");
 			
 
 			
 			// ALTERNATIVAS PARA FALLAS
 			int method = Integer.parseInt(args[1]);
-			Relation<AndNode,AndNode> rel = null;
+			Relation<AndNode,AndNode> rel = new Relation();
 			
 			switch(method) {
 			case 0:
 				System.out.println("Skiping fault injection.");
-				return;
+				break;
 			
 			case 1:
 				// Baseline
@@ -159,8 +159,7 @@ public class Main {
 				System.out.println("no such method (" + method + ")");	
 			}
 			
-			/*	Reporting un tollerated faults. Should do nothing with
-			 *	on-the-fly variants. 
+			/*	Reporting un tollerated faults.
 			*/
 			for(TableauxNode n : t.get_graph().vertexSet()) {
 				if (n instanceof AndNode && n.faulty) {
@@ -191,7 +190,9 @@ public class Main {
 			
 			
 			// Model Extraction
-			ModelExtractor ex = new ModelExtractor(t);
+			//ModelExtractor ex = new ModelExtractor(t);
+			NaiveModelExtractor ex = new NaiveModelExtractor(t);
+			
 			DirectedGraph<ModelNode,DefaultEdge> model = ex.extract_model();
 			Debug.to_file(Debug.to_dot(model, Debug.model_node_render_min), "output/model.dot");
 			
@@ -200,7 +201,12 @@ public class Main {
 			ProgramExtractor p = new ProgramExtractor(model);
 			Debug.to_file(p.extract_ftp(), "output/program.txt");
 			
-			
+			for(AndNode n : t.and_nodes()) {
+				System.out.println(n + " -> " + t.and_nodes().stream().filter(
+						_n -> _n != n && n.formulas.stream().filter(f -> !(f instanceof DeonticProposition)).collect(Collectors.toSet())
+						.equals(_n.formulas.stream().filter(f -> !(f instanceof DeonticProposition)).collect(Collectors.toSet()))).collect(Collectors.toSet())
+						);
+			}
 			
 			
 		} catch (Exception e) {
