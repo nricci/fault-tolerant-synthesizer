@@ -1,0 +1,1 @@
+java -ea -Xss64m -Xmx2g -cp bin:lib/* Main case_studies/new 0 true
