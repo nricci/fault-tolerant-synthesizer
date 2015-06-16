@@ -323,15 +323,17 @@ public class Tableaux {
 	public List<TableauxNode> do_tableau(boolean deontic_filter) {
 		List<TableauxNode> res = new LinkedList<>();
 		int step = 0;
-		this.to_dot("output/tab/tableaux_" + step++ + ".dot", Debug.default_node_render);
+		//this.to_dot("output/tab/tableaux_" + step++ + ".dot", Debug.default_node_render);
 		while (this.frontier().stream()
 				.filter(x -> !to_delete.contains(x))
 				.findFirst()
 				.isPresent()) 
 		{
 			res.addAll(expand(deontic_filter));
-			this.to_dot("output/tab/tableaux_" + step++ + ".dot", Debug.default_node_render);
+			//System.out.print("*");
+			//this.to_dot("output/tab/tableaux_" + step++ + ".dot", Debug.default_node_render);
 		}
+		//System.out.println("");
 		return res;
 	}
 	
@@ -387,7 +389,15 @@ public class Tableaux {
 		Set<AndNode> _nodes = new HashSet<AndNode>();
 				
 		Set<Set<StateFormula>> _succs = closure(n.formulas);
-		if(debug) System.out.println("\n _succs : " + _succs);
+		if(debug) System.out.println("\n _succs : " + _succs);		
+		
+		// nasty fix
+		if(_succs == null) {
+			to_delete.add(n);
+			return new LinkedList<TableauxNode>();
+		}
+			
+		
 		if(_succs.isEmpty())
 			to_delete.add(n);
 				

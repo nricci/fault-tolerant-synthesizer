@@ -62,9 +62,9 @@ public class FaultInjector {
 		while(!_injection_stack.isEmpty()) {
 
 			// DEBUG
-			System.out.println();
-			System.out.println("loop " + loop);
-			System.out.println("injection stack = " + _injection_stack);
+			//System.out.println();
+			//System.out.println("loop " + loop);
+			//System.out.println("injection stack = " + _injection_stack);
 	
 			//_t.to_dot("output/gtab/" + loop + "_entry.dot", Debug.full_node_render, _mask);
 			
@@ -98,11 +98,11 @@ public class FaultInjector {
 			
 			loop++;
 		}
-		_t.to_dot("output/gtab/" + loop + "_tableaux_final.dot", Debug.node_render_no_AX_AG_OG, _mask);
+		//_t.to_dot("output/gtab/" + loop + "_tableaux_final.dot", Debug.node_render_no_AX_AG_OG, _mask);
 		
 		MaskingCalculator m = new MaskingCalculator(_t);
 		_mask = m.compute();
-		System.out.println("check mask : " + check_mask());
+		//System.out.println("check mask : " + check_mask());
 		return _mask;
 	}
 	
