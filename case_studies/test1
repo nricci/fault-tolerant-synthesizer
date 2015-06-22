@@ -7,7 +7,4 @@ a,b;
 
 a && b;
 
-
-OG(a || b);
-
 AG(EX(True));
