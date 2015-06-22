@@ -100,88 +100,6 @@ public class Main {
 			t.to_dot("output/tableaux.dot", Debug.default_node_render);
 			t.to_dot("output/tableaux_min.dot", Debug.node_render_min);
 			
-
-			
-			// ALTERNATIVAS PARA FALLAS
-			int method = Integer.parseInt(args[1]);
-			Relation<AndNode,AndNode> rel = new Relation();
-			
-			switch(method) {
-			case 0:
-				System.out.println("Skiping fault injection.");
-				break;
-			
-			case 1:
-				// Baseline
-				
-				System.out.print("[fault-injection (FaultInjector 1)] ... ");
-				rel = new FaultInjector(t).run();
-				System.out.println("done.");
-				
-			break;	
-			case 2:
-				// Some degree of (on-the-fly)ness
-				
-				System.out.print("[fault-injection (FaultInjector 1)] ... ");
-				rel = new FaultInjectorII(t).run();
-				System.out.println("done.");
-	
-			break;
-			case 4:
-				// OLD STUFF --- REMOVE
-				
-				System.out.print("[fault-injection] ... ");
-				
-				t.to_dot("output/pre_faults.dot", Debug.node_render_elem);
-				FaultInjectorIII ff = new FaultInjectorIII(t);
-				rel = ff.run();
-				t.to_dot("output/pos_faults.dot", Debug.node_render_elem,rel);
-				
-				System.out.println("done.");
-				System.out.print("[non-masking relation] ... ");
-				System.out.println("done.");
-				
-				for(TableauxNode n : t.get_graph().vertexSet()) {
-					if (n instanceof AndNode && n.faulty) {
-						Set<?> set = rel
-								.stream()
-								.filter(p -> p.second.equals(n))
-								.map(p -> p.first)
-								.filter(x -> !x.faulty)
-								.collect(Collectors.toSet());
-						if(set.isEmpty())
-							System.out.println("Untollerated Fault : " + n);
-					}
-				}
-			break;
-			
-			default:
-				System.out.println("no such method (" + method + ")");	
-			}
-			
-			/*	Reporting un tollerated faults.
-			*/
-			for(TableauxNode n : t.get_graph().vertexSet()) {
-				if (n instanceof AndNode && n.faulty) {
-					Set<?> set = rel
-							.stream()
-							.filter(p -> p.first.equals(n))
-							.map(p -> p.second)
-							.filter(x -> !x.faulty)
-							.collect(Collectors.toSet());
-					if(set.isEmpty())
-						System.out.println("Untollerated Fault : " + n);
-				}
-			}
-			
-			
-			
-			t.to_dot("output/final_tableaux.dot", Debug.default_node_render);
-			t.to_dot("output/final_tableaux_elem.dot", Debug.node_render_no_AX_AG_OG, rel);
-			t.to_dot("output/final_tableaux_min.dot", Debug.node_render_min, rel);
-			t.to_dot_levels_of_tolerance("output/levels.dot", null, rel);
-			
-		
 			long end_time = System.currentTimeMillis();
 			System.out.println("total synthesis time: " +  (end_time - start_time) + " ms.");
 			System.out.println("final tableau : " +  t.get_graph().vertexSet().size() + " nodes, "
@@ -190,8 +108,8 @@ public class Main {
 			
 			
 			// Model Extraction
-			//ModelExtractor ex = new ModelExtractor(t);
-			NaiveModelExtractor ex = new NaiveModelExtractor(t);
+			ModelExtractor ex = new ModelExtractor(t);
+			//NaiveModelExtractor ex = new NaiveModelExtractor(t);
 			
 			DirectedGraph<ModelNode,DefaultEdge> model = ex.extract_model();
 			Debug.to_file(Debug.to_dot(model, Debug.model_node_render_min), "output/model.dot");
@@ -200,13 +118,6 @@ public class Main {
 			// Program Extraction
 			ProgramExtractor p = new ProgramExtractor(model);
 			Debug.to_file(p.extract_ftp(), "output/program.txt");
-			
-			for(AndNode n : t.and_nodes()) {
-				System.out.println(n + " -> " + t.and_nodes().stream().filter(
-						_n -> _n != n && n.formulas.stream().filter(f -> !(f instanceof DeonticProposition)).collect(Collectors.toSet())
-						.equals(_n.formulas.stream().filter(f -> !(f instanceof DeonticProposition)).collect(Collectors.toSet()))).collect(Collectors.toSet())
-						);
-			}
 			
 			
 		} catch (Exception e) {
