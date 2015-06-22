@@ -72,7 +72,7 @@ public class Main {
 			Specification s = Parser.parse_specification(args[0]);
 					
 			// Tableaux
-			boolean filter = Boolean.parseBoolean(args[2]);
+			boolean filter = false;
 			Tableaux t = new Tableaux(s);
 			t.do_tableau(filter);
 			
